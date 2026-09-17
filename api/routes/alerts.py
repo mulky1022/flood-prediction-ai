@@ -127,7 +127,7 @@ def get_triggered_alerts(
 
 
 @router.post(
-    "/alerts/triggered/{alert_id:int}/read",
+    "/alerts/triggered/{alert_id}/read",
     response_model=TriggeredAlertActionResponse,
     summary="Mark triggered alert as read"
 )
@@ -142,7 +142,7 @@ def mark_triggered_alert_read(
 
 
 @router.post(
-    "/alerts/triggered/{alert_id:int}/dismiss",
+    "/alerts/triggered/{alert_id}/dismiss",
     response_model=TriggeredAlertActionResponse,
     summary="Dismiss triggered alert"
 )
