@@ -157,7 +157,7 @@ def dismiss_triggered_alert(
 
 
 @router.get(
-    "/alerts/{alert_id:int}",
+    "/alerts/{alert_id}",
     response_model=AlertResponse,
     responses={404: {"model": ErrorResponse, "description": "Alert not found"}},
     summary="Get alert details by ID"
@@ -206,7 +206,7 @@ def get_location_alerts(
 
 
 @router.post(
-    "/alerts/{alert_id:int}/acknowledge",
+    "/alerts/{alert_id}/acknowledge",
     response_model=AlertActionResponse,
     responses={404: {"model": ErrorResponse, "description": "Alert not found"}},
     summary="Acknowledge an active alert"
@@ -223,15 +223,15 @@ def acknowledge_alert(
         )
     return AlertActionResponse(
         status="success",
-        action="ACKNOWLEDGE",
         alert_id=alert_id,
-        message=f"Alert {alert_id} marked as ACKNOWLEDGED.",
+        action="ACKNOWLEDGE",
+        message=f"Alert {alert_id} acknowledged.",
         alert=updated
     )
 
 
 @router.post(
-    "/alerts/{alert_id:int}/resolve",
+    "/alerts/{alert_id}/resolve",
     response_model=AlertActionResponse,
     responses={404: {"model": ErrorResponse, "description": "Alert not found"}},
     summary="Resolve a flood alert"
@@ -248,9 +248,9 @@ def resolve_alert(
         )
     return AlertActionResponse(
         status="success",
-        action="RESOLVE",
         alert_id=alert_id,
-        message=f"Alert {alert_id} marked as RESOLVED.",
+        action="RESOLVE",
+        message=f"Alert {alert_id} resolved.",
         alert=updated
     )
 
