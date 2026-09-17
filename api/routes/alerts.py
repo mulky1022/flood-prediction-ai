@@ -73,7 +73,7 @@ def get_active_alerts(
 
 
 @router.get(
-    "/alerts/{alert_id}",
+    "/alerts/{alert_id:int}",
     response_model=AlertResponse,
     responses={404: {"model": ErrorResponse, "description": "Alert not found"}},
     summary="Get alert details by ID"
@@ -122,7 +122,7 @@ def get_location_alerts(
 
 
 @router.post(
-    "/alerts/{alert_id}/acknowledge",
+    "/alerts/{alert_id:int}/acknowledge",
     response_model=AlertActionResponse,
     responses={404: {"model": ErrorResponse, "description": "Alert not found"}},
     summary="Acknowledge an active alert"
@@ -147,7 +147,7 @@ def acknowledge_alert(
 
 
 @router.post(
-    "/alerts/{alert_id}/resolve",
+    "/alerts/{alert_id:int}/resolve",
     response_model=AlertActionResponse,
     responses={404: {"model": ErrorResponse, "description": "Alert not found"}},
     summary="Resolve a flood alert"
