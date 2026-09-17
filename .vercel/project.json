@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_6ZVyeYpNFvzbwyzHrveMxrjIwmqr",
+  "orgId": "team_AVnfIjuj7mwQP9pSKr9oULue",
+  "projectName": "flood-prediction",
+  "settings": {
+    "createdAt": 1789644279405,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

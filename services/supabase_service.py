@@ -30,7 +30,11 @@ SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv(
 _LOCAL_WEATHER_OBSERVATIONS: List[Dict[str, Any]] = []
 _LOCAL_PREDICTIONS: List[Dict[str, Any]] = []
 _LOCAL_ALERTS: List[Dict[str, Any]] = []
+_LOCAL_ALERT_PREFERENCES: List[Dict[str, Any]] = []
+_LOCAL_TRIGGERED_ALERTS: List[Dict[str, Any]] = []
 _ALERT_ID_COUNTER: int = 1
+_PREFERENCE_ID_COUNTER: int = 1
+_TRIGGERED_ALERT_ID_COUNTER: int = 1
 
 
 
@@ -49,7 +53,10 @@ class SupabaseService:
         if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and "your-project" not in SUPABASE_URL:
             try:
                 from supabase import create_client, Client
-                self.client: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+                clean_url = SUPABASE_URL.strip().rstrip('/')
+                if clean_url.endswith('/rest/v1'):
+                    clean_url = clean_url[:-8].rstrip('/')
+                self.client: Client = create_client(clean_url, SUPABASE_SERVICE_ROLE_KEY)
                 self.is_connected = True
                 logger.info("Supabase client connected successfully.")
             except Exception as e:
@@ -447,6 +454,303 @@ class SupabaseService:
                 alert["updated_at"] = now_iso
                 resolved_list.append(alert)
         return resolved_list
+
+    # --------------------------------------------------------------------
+    # Alert Preferences Operations
+    # --------------------------------------------------------------------
+    def save_alert_preference(self, preference_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Creates or updates a user alert preference record.
+        """
+        global _PREFERENCE_ID_COUNTER
+        device_id = preference_data.get("device_id")
+        loc_id = preference_data.get("location_id")
+        if loc_id is not None and str(loc_id).isdigit():
+            loc_id = int(loc_id)
+        elif loc_id is not None and str(loc_id).lower() in ["null", "all", ""]:
+            loc_id = None
+
+        now_iso = datetime.now(timezone(timedelta(hours=5, minutes=30))).isoformat()
+        record = {
+            "device_id": device_id,
+            "location_id": loc_id,
+            "risk_threshold": float(preference_data.get("risk_threshold", 35.0)),
+            "notification_channels": preference_data.get("notification_channels", ["in_app"]),
+            "is_active": bool(preference_data.get("is_active", True)),
+            "created_at": preference_data.get("created_at") or now_iso,
+            "updated_at": now_iso
+        }
+
+        # Enrich location names if location_id is present
+        if loc_id:
+            loc = self.get_location(loc_id)
+            if loc:
+                record["location_name"] = loc.get("place_name")
+                record["district"] = loc.get("district")
+        else:
+            record["location_name"] = "All Monitored Stations"
+            record["district"] = "Island-wide"
+
+        if self.is_connected and self.client:
+            try:
+                # Check for existing matching preference for this device + location
+                query = self.client.table("alert_preferences").select("*").eq("device_id", device_id)
+                if loc_id is None:
+                    query = query.is_("location_id", "null")
+                else:
+                    query = query.eq("location_id", loc_id)
+                
+                existing = query.execute()
+                if existing.data and len(existing.data) > 0:
+                    pref_id = existing.data[0]["id"]
+                    resp = self.client.table("alert_preferences").update({
+                        "risk_threshold": record["risk_threshold"],
+                        "notification_channels": record["notification_channels"],
+                        "is_active": record["is_active"],
+                        "updated_at": now_iso
+                    }).eq("id", pref_id).execute()
+                    if resp.data:
+                        merged = {**record, **resp.data[0]}
+                        return {"status": "success", "persisted_to": "supabase", "data": merged}
+                else:
+                    resp = self.client.table("alert_preferences").insert(record).execute()
+                    if resp.data:
+                        merged = {**record, **resp.data[0]}
+                        return {"status": "success", "persisted_to": "supabase", "data": merged}
+            except Exception as e:
+                logger.warning(f"Supabase save_alert_preference failed: {e}. Persisting to local memory.")
+
+        # Local in-memory fallback
+        for pref in _LOCAL_ALERT_PREFERENCES:
+            if pref.get("device_id") == device_id and pref.get("location_id") == loc_id:
+                pref["risk_threshold"] = record["risk_threshold"]
+                pref["notification_channels"] = record["notification_channels"]
+                pref["is_active"] = record["is_active"]
+                pref["updated_at"] = now_iso
+                return {"status": "success", "persisted_to": "local_memory", "data": pref}
+
+        record["id"] = _PREFERENCE_ID_COUNTER
+        _PREFERENCE_ID_COUNTER += 1
+        _LOCAL_ALERT_PREFERENCES.append(record)
+        return {"status": "success", "persisted_to": "local_memory", "data": record}
+
+    def get_alert_preferences(
+        self,
+        device_id: Optional[str] = None,
+        location_id: Optional[Union[int, str]] = None,
+        is_active: Optional[bool] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves matching alert preferences.
+        """
+        loc_id = int(location_id) if location_id is not None and str(location_id).isdigit() else location_id
+
+        if self.is_connected and self.client:
+            try:
+                query = self.client.table("alert_preferences").select("*")
+                if device_id:
+                    query = query.eq("device_id", device_id)
+                if loc_id is not None:
+                    query = query.eq("location_id", loc_id)
+                if is_active is not None:
+                    query = query.eq("is_active", is_active)
+                
+                resp = query.order("created_at", desc=True).execute()
+                if resp.data:
+                    # Enrich location details
+                    for item in resp.data:
+                        if item.get("location_id"):
+                            loc = self.get_location(item["location_id"])
+                            if loc:
+                                item["location_name"] = loc.get("place_name")
+                                item["district"] = loc.get("district")
+                        else:
+                            item["location_name"] = "All Monitored Stations"
+                            item["district"] = "Island-wide"
+                    return resp.data
+            except Exception as e:
+                logger.warning(f"Supabase get_alert_preferences failed: {e}. Using local store.")
+
+        results = _LOCAL_ALERT_PREFERENCES
+        if device_id:
+            results = [p for p in results if p.get("device_id") == device_id]
+        if loc_id is not None:
+            results = [p for p in results if p.get("location_id") == loc_id]
+        if is_active is not None:
+            results = [p for p in results if p.get("is_active") == is_active]
+
+        for p in results:
+            if p.get("location_id"):
+                loc = self.get_location(p["location_id"])
+                if loc:
+                    p["location_name"] = loc.get("place_name")
+                    p["district"] = loc.get("district")
+            else:
+                p["location_name"] = "All Monitored Stations"
+                p["district"] = "Island-wide"
+
+        return sorted(results, key=lambda x: x.get("created_at", ""), reverse=True)
+
+    def delete_alert_preference(
+        self,
+        preference_id: Optional[int] = None,
+        device_id: Optional[str] = None,
+        location_id: Optional[Union[int, str]] = None
+    ) -> bool:
+        """
+        Deletes or deactivates an alert preference.
+        """
+        if self.is_connected and self.client:
+            try:
+                if preference_id:
+                    self.client.table("alert_preferences").delete().eq("id", preference_id).execute()
+                    return True
+                elif device_id:
+                    query = self.client.table("alert_preferences").delete().eq("device_id", device_id)
+                    if location_id is not None:
+                        query = query.eq("location_id", location_id)
+                    query.execute()
+                    return True
+            except Exception as e:
+                logger.warning(f"Supabase delete_alert_preference failed: {e}.")
+
+        global _LOCAL_ALERT_PREFERENCES
+        if preference_id:
+            _LOCAL_ALERT_PREFERENCES = [p for p in _LOCAL_ALERT_PREFERENCES if p.get("id") != preference_id]
+            return True
+        elif device_id:
+            if location_id is not None:
+                _LOCAL_ALERT_PREFERENCES = [
+                    p for p in _LOCAL_ALERT_PREFERENCES 
+                    if not (p.get("device_id") == device_id and p.get("location_id") == location_id)
+                ]
+            else:
+                _LOCAL_ALERT_PREFERENCES = [p for p in _LOCAL_ALERT_PREFERENCES if p.get("device_id") != device_id]
+            return True
+        return False
+
+    # --------------------------------------------------------------------
+    # Triggered Alerts Operations
+    # --------------------------------------------------------------------
+    def save_triggered_alert(self, alert_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Persists a triggered alert created when an inference crosses a user threshold.
+        """
+        global _TRIGGERED_ALERT_ID_COUNTER
+        loc_id = alert_data.get("location_id")
+        loc_id = int(loc_id) if str(loc_id).isdigit() else loc_id
+        now_iso = datetime.now(timezone(timedelta(hours=5, minutes=30))).isoformat()
+
+        prob = float(alert_data.get("flood_probability", 0.0))
+        record = {
+            "preference_id": alert_data.get("preference_id"),
+            "device_id": alert_data.get("device_id"),
+            "location_id": loc_id,
+            "prediction_id": alert_data.get("prediction_id"),
+            "flood_probability": prob,
+            "risk_level": alert_data.get("risk_level", "LOW"),
+            "threshold_crossed": float(alert_data.get("threshold_crossed", 35.0)),
+            "title": alert_data.get("title", ""),
+            "message": alert_data.get("message", ""),
+            "status": alert_data.get("status", "UNREAD"),
+            "created_at": alert_data.get("created_at") or now_iso
+        }
+
+        loc = self.get_location(loc_id)
+        if loc:
+            record["location_name"] = loc.get("place_name")
+            record["district"] = loc.get("district")
+
+        if self.is_connected and self.client:
+            try:
+                resp = self.client.table("triggered_alerts").insert(record).execute()
+                if resp.data:
+                    merged = {**record, **resp.data[0]}
+                    merged["flood_probability_percent"] = round(prob * 100, 2)
+                    return {"status": "success", "persisted_to": "supabase", "data": merged}
+            except Exception as e:
+                logger.warning(f"Supabase save_triggered_alert failed: {e}. Persisting to local memory.")
+
+        record["id"] = _TRIGGERED_ALERT_ID_COUNTER
+        _TRIGGERED_ALERT_ID_COUNTER += 1
+        _LOCAL_TRIGGERED_ALERTS.append(record)
+        res = {**record, "flood_probability_percent": round(prob * 100, 2)}
+        return {"status": "success", "persisted_to": "local_memory", "data": res}
+
+    def get_triggered_alerts(
+        self,
+        device_id: Optional[str] = None,
+        location_id: Optional[Union[int, str]] = None,
+        status: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieves triggered alert records.
+        """
+        loc_id = int(location_id) if location_id is not None and str(location_id).isdigit() else location_id
+
+        if self.is_connected and self.client:
+            try:
+                query = self.client.table("triggered_alerts").select("*")
+                if device_id:
+                    query = query.eq("device_id", device_id)
+                if loc_id is not None:
+                    query = query.eq("location_id", loc_id)
+                if status:
+                    query = query.eq("status", status)
+
+                resp = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+                if resp.data:
+                    for item in resp.data:
+                        if item.get("location_id"):
+                            loc = self.get_location(item["location_id"])
+                            if loc:
+                                item["location_name"] = loc.get("place_name")
+                                item["district"] = loc.get("district")
+                        prob = float(item.get("flood_probability", 0.0))
+                        item["flood_probability_percent"] = round(prob * 100, 2)
+                    return resp.data
+            except Exception as e:
+                logger.warning(f"Supabase get_triggered_alerts failed: {e}. Using local store.")
+
+        results = _LOCAL_TRIGGERED_ALERTS
+        if device_id:
+            results = [a for a in results if a.get("device_id") == device_id]
+        if loc_id is not None:
+            results = [a for a in results if a.get("location_id") == loc_id]
+        if status:
+            results = [a for a in results if a.get("status") == status]
+
+        for a in results:
+            if a.get("location_id"):
+                loc = self.get_location(a["location_id"])
+                if loc:
+                    a["location_name"] = loc.get("place_name")
+                    a["district"] = loc.get("district")
+            prob = float(a.get("flood_probability", 0.0))
+            a["flood_probability_percent"] = round(prob * 100, 2)
+
+        sorted_results = sorted(results, key=lambda x: x.get("created_at", ""), reverse=True)
+        return sorted_results[offset: offset + limit]
+
+    def update_triggered_alert_status(self, alert_id: int, status: str) -> Optional[Dict[str, Any]]:
+        """
+        Updates the read/dismissed status of a triggered alert.
+        """
+        if self.is_connected and self.client:
+            try:
+                resp = self.client.table("triggered_alerts").update({"status": status}).eq("id", alert_id).execute()
+                if resp.data and len(resp.data) > 0:
+                    return resp.data[0]
+            except Exception as e:
+                logger.warning(f"Supabase update_triggered_alert_status failed: {e}.")
+
+        for a in _LOCAL_TRIGGERED_ALERTS:
+            if a.get("id") == alert_id:
+                a["status"] = status
+                return a
+        return None
 
 
 # Global singleton instance

@@ -25,6 +25,8 @@ from api.routes.locations import router as locations_router
 from api.routes.weather import router as weather_router
 from api.routes.predictions import router as predictions_router
 from api.routes.alerts import router as alerts_router
+from api.routes.cron import router as cron_router
+from api.routes.preferences import router as preferences_router
 from services.predictor import get_predictor
 from services.supabase_service import get_supabase_service
 
@@ -38,7 +40,7 @@ logger = logging.getLogger("FloodWatchAPI")
 
 # Application Initialization
 app = FastAPI(
-    title="Sri Lanka Live Early Flood Risk Prediction & Notification System",
+    title="Flood+ — Sri Lanka Live Early Flood Risk Prediction & Notification System",
     description=(
         "Production-grade early warning API combining machine learning, "
         "Open-Meteo live rainfall telemetry, static geospatial infrastructure data, "
@@ -111,7 +113,7 @@ async def startup_event():
 @app.get("/api/health", tags=["Health"])
 def root_health():
     """Simple root health check endpoint for cloud deployment platforms."""
-    return {"status": "ok", "service": "Sri Lanka FloodWatch API", "version": "1.0.0"}
+    return {"status": "ok", "service": "Flood+ API", "version": "1.0.0"}
 
 
 # Mount Version 1 Application Routers
@@ -120,7 +122,9 @@ app.include_router(config_router, prefix="/api/v1")
 app.include_router(locations_router, prefix="/api/v1")
 app.include_router(weather_router, prefix="/api/v1")
 app.include_router(predictions_router, prefix="/api/v1")
+app.include_router(preferences_router, prefix="/api/v1")
 app.include_router(alerts_router, prefix="/api/v1")
+app.include_router(cron_router, prefix="/api/v1")
 
 # Mount Static Frontend for Unified Direct Access
 frontend_dir = BASE_DIR / "frontend"

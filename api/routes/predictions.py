@@ -10,7 +10,7 @@ from api.schemas.prediction import (
     PredictionHistoryItem,
 )
 from api.schemas.common import ErrorResponse
-from api.dependencies import get_db, get_prediction_engine, SupabaseService, PredictorService
+from api.dependencies import get_db, get_prediction_engine, get_alert_service, SupabaseService, PredictorService, AlertService
 
 router = APIRouter(tags=["Predictions"])
 
@@ -27,7 +27,8 @@ router = APIRouter(tags=["Predictions"])
 def predict_flood_risk(
     location_id: str,
     db: SupabaseService = Depends(get_db),
-    predictor: PredictorService = Depends(get_prediction_engine)
+    predictor: PredictorService = Depends(get_prediction_engine),
+    alert_service: AlertService = Depends(get_alert_service)
 ):
     """
     Executes live end-to-end flood risk prediction for a location.
@@ -66,8 +67,17 @@ def predict_flood_risk(
             detail={"status": "error", "code": "INFERENCE_ERROR", "message": prediction_result.get("message")}
         )
 
+    # Retrieve previous prediction for state transition check (avoids duplicate alerts on consecutive high cycles)
+    prev_pred = db.get_latest_prediction(loc.get("id"))
+
     # Persist prediction in Supabase database
     db.save_prediction(prediction_result)
+
+    # Evaluate user alert preferences on threshold transitions
+    try:
+        alert_service.evaluate_and_trigger_user_preferences(loc.get("id"), prediction_result, prev_pred)
+    except Exception as e:
+        pass
 
     # Reformat prediction block for schema compatibility if needed
     pred_data = prediction_result.get("prediction", {})

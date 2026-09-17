@@ -1,6 +1,6 @@
 """
 Client Configuration Route.
-Exposes public client-side runtime configuration (e.g. CARTO Basemap API key)
+Exposes public client-side runtime configuration
 without exposing any sensitive backend secrets or credentials.
 """
 
@@ -13,27 +13,20 @@ router = APIRouter(tags=["Config"])
 
 class ClientConfigResponse(BaseModel):
     status: str = "ok"
-    carto_api_key: str = ""
     app_env: str = "production"
     version: str = "1.0.0"
+    map_provider: str = "Humanitarian OpenStreetMap (HOT) & OpenStreetMap Standard"
 
 
 @router.get("/config", response_model=ClientConfigResponse)
 def get_client_config():
     """
-    Returns public client-side configuration.
-    Safely retrieves the CARTO API key configured in backend environment.
+    Returns public client-side runtime configuration.
     """
-    carto_key = (
-        os.getenv("CARTO_API_KEY") or
-        os.getenv("VITE_CARTO_API_KEY") or
-        os.getenv("NEXT_PUBLIC_CARTO_API_KEY") or
-        ""
-    ).strip()
-
     return ClientConfigResponse(
         status="ok",
-        carto_api_key=carto_key,
-        app_env=os.getenv("APP_ENV", "development"),
-        version=os.getenv("APP_VERSION", "1.0.0")
+        app_env=os.getenv("APP_ENV", "production"),
+        version=os.getenv("APP_VERSION", "1.0.0"),
+        map_provider="Humanitarian OpenStreetMap (HOT) & OpenStreetMap Standard"
     )
+

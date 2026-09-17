@@ -34,6 +34,22 @@ class NotificationService:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or NOTIFICATION_CONFIG
 
+    def get_channel_status(self) -> Dict[str, Any]:
+        """Returns the configured status of each notification delivery channel."""
+        email_cfg = self.config.get("email", {})
+        sms_cfg = self.config.get("sms", {})
+        return {
+            "web_dashboard": {"configured": True, "enabled": True},
+            "email": {
+                "configured": bool(email_cfg.get("smtp_host") and email_cfg.get("sender")),
+                "enabled": bool(email_cfg.get("enabled", False))
+            },
+            "sms": {
+                "configured": bool(sms_cfg.get("api_key") and sms_cfg.get("provider")),
+                "enabled": bool(sms_cfg.get("enabled", False))
+            }
+        }
+
     def send_notification(self, alert: Dict[str, Any]) -> Dict[str, Any]:
         """
         Dispatches alert notifications across configured channels and records truthful status.

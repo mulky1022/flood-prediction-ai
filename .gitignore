@@ -38,6 +38,8 @@ coverage.xml
 
 # Cache directories
 cache/*.json
+cache/**/*.json
+cache/weather/
 !cache/.gitkeep
 
 # OS / Editor files

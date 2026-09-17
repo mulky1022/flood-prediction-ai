@@ -344,6 +344,69 @@ class AlertService:
         updated = self.db.resolve_alert(alert_id)
         return self._enrich_alert(updated or alert)
 
+    def evaluate_and_trigger_user_preferences(
+        self,
+        location_id: Union[int, str],
+        prediction_payload: Dict[str, Any],
+        previous_prediction: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Checks current inference against all active user alert preferences.
+        Triggers an alert if current probability crosses a preference threshold
+        on transition from below threshold (or first evaluation) to avoid spam.
+        """
+        loc = self.db.get_location(location_id)
+        if not loc:
+            return []
+
+        numeric_loc_id = loc.get("id")
+        pred = prediction_payload.get("prediction", {})
+        curr_prob = float(pred.get("flood_probability", 0.0))
+        curr_prob_pct = round(curr_prob * 100, 2)
+        risk_level = pred.get("risk_level", "LOW")
+        prediction_id = prediction_payload.get("prediction_id") or prediction_payload.get("id")
+
+        prev_prob = float(previous_prediction.get("flood_probability", 0.0)) if previous_prediction else 0.0
+        prev_prob_pct = round(prev_prob * 100, 2)
+
+        # Get active preferences for this specific station or global (all stations)
+        active_prefs = self.db.get_alert_preferences(is_active=True)
+        station_prefs = [
+            p for p in active_prefs 
+            if p.get("location_id") == numeric_loc_id or p.get("location_id") is None
+        ]
+
+        triggered_records = []
+        for pref in station_prefs:
+            threshold = float(pref.get("risk_threshold", 35.0))
+            # Transition check: current >= threshold AND (prev < threshold OR no prev)
+            if curr_prob_pct >= threshold:
+                is_transition = (prev_prob_pct < threshold) or (previous_prediction is None)
+                if is_transition:
+                    alert_title = f"{risk_level} Flood Risk Alert: {loc.get('place_name')}"
+                    alert_msg = (
+                        f"Station {loc.get('place_name')} ({loc.get('district')}) has exceeded your {threshold:.0f}% threshold. "
+                        f"Current flood risk is {curr_prob_pct}% ({risk_level})."
+                    )
+                    triggered_data = {
+                        "preference_id": pref.get("id"),
+                        "device_id": pref.get("device_id"),
+                        "location_id": numeric_loc_id,
+                        "prediction_id": prediction_id,
+                        "flood_probability": curr_prob,
+                        "risk_level": risk_level,
+                        "threshold_crossed": threshold,
+                        "title": alert_title,
+                        "message": alert_msg,
+                        "status": "UNREAD"
+                    }
+                    save_res = self.db.save_triggered_alert(triggered_data)
+                    if save_res.get("data"):
+                        triggered_records.append(save_res.get("data"))
+                        logger.info(f"Triggered alert saved for Device {pref.get('device_id')} at Location {numeric_loc_id} (Threshold: {threshold}%, Prob: {curr_prob_pct}%)")
+
+        return triggered_records
+
     def process_all_monitored_locations(self) -> Dict[str, Any]:
         """
         Batch-evaluates alerts for all 33 monitoring stations across Sri Lanka.
@@ -352,6 +415,7 @@ class AlertService:
         created_count = 0
         updated_count = 0
         resolved_count = 0
+        triggered_alerts_total = 0
         results = []
 
         for loc in locations:

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary-fixed-dim":"#bec6e0","on-primary-fixed-variant":"#3f465c","on-primary":"#ffffff","secondary-fixed":"#cce5ff","background":"#f8f9ff","surface-container-high":"#dce9ff","on-primary-container":"#7c839b","on-secondary":"#ffffff","error-container":"#ffdad6","primary-fixed":"#dae2fd","inverse-on-surface":"#eaf1ff","on-tertiary-fixed":"#001e2c","secondary-container":"#5bb8fe","on-error":"#ffffff","primary-container":"#131b2e","on-background":"#0b1c30","on-secondary-container":"#00476e","surface-dim":"#cbdbf5","surface-tint":"#565e74","on-tertiary-container":"#008ebf","surface":"#f8f9ff","outline-variant":"#c6c6cd","inverse-surface":"#213145","on-secondary-fixed-variant":"#004b73","outline":"#76777d","on-tertiary":"#ffffff","on-secondary-fixed":"#001d31","on-error-container":"#93000a","tertiary-fixed-dim":"#7bd0ff","surface-container":"#e5eeff","tertiary-container":"#001e2c","on-primary-fixed":"#131b2e","surface-variant":"#d3e4fe","tertiary-fixed":"#c4e7ff","surface-container-highest":"#d3e4fe","surface-container-lowest":"#ffffff","on-tertiary-fixed-variant":"#004c69","surface-container-low":"#eff4ff","on-surface-variant":"#45464d","inverse-primary":"#bec6e0","error":"#ba1a1a","secondary":"#006398","surface-bright":"#f8f9ff","secondary-fixed-dim":"#93ccff","on-surface":"#0b1c30","tertiary":"#000000","primary":"#000000"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"margin-md":"1.5rem","space-xl":"1.5rem","margin":"1rem","space-md":"0.75rem","gutter-lg":"1.5rem","space-xs":"0.25rem","gutter":"1rem","space-sm":"0.5rem","space-lg":"1rem","margin-lg":"2rem"},"fontFamily":{"display-lg":["Manrope"],"label-lg":["Inter"],"data-display":["JetBrains Mono"],"headline-sm":["Manrope"],"body-sm":["Inter"],"label-md":["Inter"],"data-metric":["JetBrains Mono"],"body-lg":["Inter"],"headline-lg-mobile":["Manrope"],"headline-lg":["Manrope"],"data-timestamp":["JetBrains Mono"],"body-md":["Inter"]},"fontSize":{"display-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"label-lg":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"data-display":["24px",{"lineHeight":"28px","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-md":["11px",{"lineHeight":"14px","letterSpacing":"0.025em","fontWeight":"500"}],"data-metric":["13px",{"lineHeight":"16px","fontWeight":"500"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-lg-mobile":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"data-timestamp":["11px",{"lineHeight":"14px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}]}}}};</script></head><body class="bg-background font-body-md text-on-background min-h-screen flex flex-col antialiased selection:bg-secondary-fixed selection:text-on-secondary-fixed"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container shadow-[0_1px_8px_rgba(15,23,42,0.04)]"><div class="h-16 w-full px-margin-lg flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md shrink-0"><img alt="Brand logo. - Primary color: #0f172a
+- Font: manrope
+- Mode: light
+- Roundness: rounded-sm
+" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XplwNydYnBn8QIHK5lEvKY6iTsrps_JmgKCdUxqZ5NydeguiT11WDFfSIzfl1QgLBYF459Nts9DTkPYWKhNvcMJm8w695J9y-VJKq9zudPHVfgtIeFwviO2ZtgqpI4yfdrzC_M7fEp7rXU26PJrE6_Y00eSy4klMIeCU-3PzIIEg9yM8wMBA3NZ4BGnYcr7CjEuonXFYCKUhsg2ous1Zr0d1Bi7Q3k0ZvyAAyEtwzuV-kfKLuI1ZJe-F4"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">Sri Lanka FloodWatch</span><span class="font-label-md text-label-md bg-surface-container px-1.5 py-0.5 rounded text-secondary font-semibold uppercase tracking-wider">AI/ML</span></div><span class="font-label-md text-label-md text-on-surface-variant leading-tight">Live Early Flood Risk Prediction</span></div></div><nav class="hidden lg:flex items-center gap-space-xs bg-surface-container-low p-1 rounded-lg border border-surface-container" data-active-classes="bg-primary-container text-on-primary font-semibold"><a class="px-space-md py-1.5 rounded text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="live-dashboard" href="#">Live Dashboard</a><a aria-current="page" class="px-space-md py-1.5 rounded transition-colors bg-primary-container text-on-primary font-semibold" data-path="flood-map" href="#">Flood Map</a><a class="px-space-md py-1.5 rounded text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="location-details" href="#">Location Details</a><a class="px-space-md py-1.5 rounded text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="alerts-history" href="#">Alerts &amp; History</a></nav><div class="flex items-center gap-space-md shrink-0"><div class="hidden xl:flex items-center gap-space-md bg-surface-container-low px-space-md py-1 rounded border border-surface-container"><div class="flex items-center gap-1.5"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span><span class="font-data-metric text-data-metric text-on-surface font-semibold tracking-wide">LIVE DATA</span></div><span class="text-outline-variant font-data-timestamp">|</span><div class="flex items-center gap-1 text-on-surface-variant font-data-timestamp text-data-timestamp"><span class="material-symbols-outlined text-[13px]">schedule</span><span>11:21 PM</span></div><span class="text-outline-variant font-data-timestamp">|</span><div class="flex items-center gap-1 text-on-surface-variant font-data-timestamp text-data-timestamp"><span class="material-symbols-outlined text-[13px]">cloud_sync</span><span>Open-Meteo</span></div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-background flex-1"><div class="flex flex-col w-full">
+<!-- Interactive Map Screen Root Container -->
+<div class="w-full px-margin-lg py-space-md flex flex-col gap-space-md">
+<!-- Header Module -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">radar</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Flood Monitoring Map</h1>
+<span class="ml-space-xs font-label-md text-label-md bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5 rounded font-medium">GIS Model Active</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Live risk conditions across monitored Sri Lankan locations (33 Monitoring Stations)</p>
+</div>
+<!-- Quick Actions Header Segment -->
+<div class="flex items-center flex-wrap gap-space-xs">
+<button class="flex items-center gap-1.5 px-space-md py-1.5 bg-surface-container-low hover:bg-surface-container text-on-surface rounded font-label-lg text-label-lg transition-colors shadow-sm" id="refreshDataBtn">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+<span>Refresh Data</span>
+</button>
+<div class="relative inline-block text-left">
+<button class="flex items-center gap-1.5 px-space-md py-1.5 bg-surface-container-low hover:bg-surface-container text-on-surface rounded font-label-lg text-label-lg transition-colors shadow-sm" id="layerDropdownBtn">
+<span class="material-symbols-outlined text-[16px] text-secondary">layers</span>
+<span>Layer: Precipitation Overlay</span>
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+<button class="flex items-center gap-1.5 px-space-md py-1.5 bg-primary hover:bg-primary-container text-on-primary rounded font-label-lg text-label-lg transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span>Export GeoJSON</span>
+</button>
+</div>
+</div>
+<!-- Filter & Search Toolbar -->
+<div class="flex flex-col lg:flex-row items-center justify-between gap-space-md bg-surface-container-lowest p-space-sm rounded-xl shadow-sm">
+<!-- Search Field -->
+<div class="relative w-full lg:w-96">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
+<input class="w-full pl-9 pr-space-md py-1.5 bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm rounded focus:outline-none focus:bg-surface-container-lowest transition-all" id="stationSearch" placeholder="Search location or district... (e.g. Colombo, Kelani, Kandy)" type="text"/>
+</div>
+<!-- Filter Toggle Pills -->
+<div class="flex items-center gap-1 overflow-x-auto w-full lg:w-auto p-1 bg-surface-container-low rounded-lg">
+<button class="filter-pill active px-3 py-1 bg-surface-container-lowest text-on-surface rounded font-label-lg text-label-lg shadow-sm font-semibold transition-all" data-filter="all">All (33)</button>
+<button class="filter-pill px-3 py-1 text-on-surface-variant hover:text-on-surface rounded font-label-lg text-label-lg transition-all flex items-center gap-1.5" data-filter="low">
+<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+<span>Low (24)</span>
+</button>
+<button class="filter-pill px-3 py-1 text-on-surface-variant hover:text-on-surface rounded font-label-lg text-label-lg transition-all flex items-center gap-1.5" data-filter="moderate">
+<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+<span>Moderate (6)</span>
+</button>
+<button class="filter-pill px-3 py-1 text-on-surface-variant hover:text-on-surface rounded font-label-lg text-label-lg transition-all flex items-center gap-1.5" data-filter="high">
+<span class="w-2 h-2 rounded-full bg-orange-600 inline-block"></span>
+<span>High (2)</span>
+</button>
+<button class="filter-pill px-3 py-1 text-on-surface-variant hover:text-on-surface rounded font-label-lg text-label-lg transition-all flex items-center gap-1.5" data-filter="critical">
+<span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
+<span>Critical (1)</span>
+</button>
+</div>
+</div>
+<!-- Main Workspace Split Grid: GIS Canvas + Inspection Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+<!-- Geospatial Viewport Surface (8 Columns on desktop) -->
+<div class="lg:col-span-8 relative bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden h-[740px] flex flex-col">
+<!-- Interactive SVG Cartography Render -->
+<div class="relative w-full h-full bg-[#0b1622] flex items-center justify-center select-none overflow-hidden" id="mapViewport">
+<!-- Background Coordinate Radar Grid -->
+<div class="absolute inset-0 opacity-15 pointer-events-none" style="background-image: radial-gradient(#38bdf8 1px, transparent 1px); background-size: 32px 32px;"></div>
+<!-- Compass Rose Indicator (Top Right) -->
+<div class="absolute top-4 right-4 z-20 flex flex-col items-center p-2 rounded-lg bg-surface-container-lowest/80 backdrop-blur-md shadow-sm pointer-events-none">
+<span class="font-data-timestamp text-data-timestamp font-semibold text-secondary">N</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">navigation</span>
+<span class="font-data-timestamp text-data-timestamp text-outline">08° N</span>
+</div>
+<!-- Live GIS Elevation & Vector Canvas -->
+<svg class="w-full h-full max-h-[720px] object-contain drop-shadow-2xl transition-transform duration-300" id="sriLankaMapSvg" viewbox="0 0 900 1100">
+<defs>
+<!-- Glowing marker filters -->
+<filter height="200%" id="glowCritical" width="200%" x="-50%" y="-50%">
+<fegaussianblur result="blur" stddeviation="6"></fegaussianblur>
+<femerge>
+<femergenode in="blur"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+<filter height="200%" id="glowHigh" width="200%" x="-50%" y="-50%">
+<fegaussianblur result="blur" stddeviation="5"></fegaussianblur>
+<femerge>
+<femergenode in="blur"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+<filter height="200%" id="glowModerate" width="200%" x="-50%" y="-50%">
+<fegaussianblur result="blur" stddeviation="4"></fegaussianblur>
+<femerge>
+<femergenode in="blur"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+<radialgradient cx="45%" cy="50%" id="landmassGradient" r="55%">
+<stop offset="0%" stop-color="#1e293b"></stop>
+<stop offset="60%" stop-color="#131d2b"></stop>
+<stop offset="100%" stop-color="#0d1520"></stop>
+</radialgradient>
+<lineargradient id="kelaniBasinGlow" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#f97316" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"></stop>
+</lineargradient>
+</defs>
+<!-- Sri Lanka Shoreline Outlines -->
+<path d="M 430 80
+                     C 460 110, 480 150, 495 190
+                     C 520 250, 560 320, 580 400
+                     C 600 480, 620 560, 610 640
+                     C 600 720, 570 800, 530 870
+                     C 490 940, 430 1000, 370 1010
+                     C 320 1015, 270 980, 240 930
+                     C 210 880, 205 810, 220 740
+                     C 230 680, 220 620, 210 560
+                     C 200 500, 210 440, 230 380
+                     C 250 320, 270 260, 310 200
+                     C 340 150, 380 100, 410 70
+                     Z" fill="url(#landmassGradient)" stroke="#334155" stroke-width="2.5"></path>
+<!-- Jaffna Peninsula & Northern Isles Hint -->
+<path d="M 370 65 C 390 40, 430 35, 450 50 C 420 80, 390 90, 370 65 Z" fill="#1e293b" stroke="#334155" stroke-width="1.5"></path>
+<path d="M 330 90 C 350 70, 370 85, 360 105 C 340 115, 325 105, 330 90 Z" fill="#1e293b" stroke="#334155" stroke-width="1.2"></path>
+<!-- Topographic Relief / Central Highlands Contour -->
+<path d="M 380 520 C 440 500, 490 550, 480 640 C 470 720, 420 760, 360 740 C 330 700, 340 600, 380 520 Z" fill="#243447" opacity="0.65"></path>
+<path d="M 400 560 C 440 550, 460 590, 450 650 C 440 690, 400 700, 380 670 C 360 640, 370 580, 400 560 Z" fill="#2d425a" opacity="0.8"></path>
+<!-- Hydrological River Systems -->
+<!-- 1. Mahaweli River System (Longest) -->
+<path d="M 410 630 Q 430 550, 470 510 T 520 420 T 545 310 T 575 250" fill="none" opacity="0.85" stroke="#38bdf8" stroke-linecap="round" stroke-width="3"></path>
+<!-- Mahaweli Tributaries -->
+<path d="M 470 510 Q 490 530, 520 540" fill="none" opacity="0.6" stroke="#38bdf8" stroke-width="1.5"></path>
+<!-- 2. Kelani River (High Risk Catchment Zone) -->
+<path d="M 400 660 Q 340 670, 300 675 T 235 680" fill="none" opacity="0.9" stroke="#f97316" stroke-linecap="round" stroke-width="4.5"></path>
+<!-- Active high-risk flood polygon around Kelani basin -->
+<ellipse cx="270" cy="675" fill="url(#kelaniBasinGlow)" rx="55" ry="25" stroke="#f97316" stroke-dasharray="4 2" stroke-width="1"></ellipse>
+<!-- 3. Kalu River -->
+<path d="M 410 720 Q 350 740, 300 760 T 240 770" fill="none" opacity="0.85" stroke="#38bdf8" stroke-linecap="round" stroke-width="3"></path>
+<!-- 4. Gin River -->
+<path d="M 390 790 Q 340 820, 290 840 T 255 860" fill="none" opacity="0.8" stroke="#38bdf8" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- 5. Nilwala River -->
+<path d="M 390 830 Q 360 870, 330 900 T 310 930" fill="none" opacity="0.8" stroke="#38bdf8" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Catchment Basin Boundary Watermark Labels -->
+<text fill="#94a3b8" font-family="JetBrains Mono" font-size="14" letter-spacing="2" opacity="0.45" x="500" y="380">MAHAWELI BASIN</text>
+<text fill="#fb923c" font-family="JetBrains Mono" font-size="13" font-weight="600" letter-spacing="1" opacity="0.85" x="260" y="650">KELANI BASIN [HIGH ALERT]</text>
+<text fill="#94a3b8" font-family="JetBrains Mono" font-size="13" letter-spacing="1.5" opacity="0.45" x="290" y="740">KALU BASIN</text>
+<text fill="#94a3b8" font-family="JetBrains Mono" font-size="12" opacity="0.45" x="280" y="825">GIN BASIN</text>
+<text fill="#94a3b8" font-family="JetBrains Mono" font-size="12" opacity="0.45" x="325" y="890">NILWALA BASIN</text>
+<!-- ================= STATION NODES ================= -->
+<!-- STATION 1: Kolonnawa (Colombo) - CRITICAL/HIGH (SELECTED) -->
+<g class="station-node cursor-pointer group" data-station="kolonnawa" tabindex="0">
+<!-- Animated outer pulse wave -->
+<circle cx="238" cy="678" fill="#ef4444" opacity="0.2" r="26">
+<animate attributename="r" dur="2s" repeatcount="indefinite" values="18;34;18"></animate>
+<animate attributename="opacity" dur="2s" repeatcount="indefinite" values="0.4;0;0.4"></animate>
+</circle>
+<!-- Target Selection Ring -->
+<circle cx="238" cy="678" fill="none" r="16" stroke="#ffffff" stroke-dasharray="3 3" stroke-width="2"></circle>
+<circle cx="238" cy="678" fill="#dc2626" filter="url(#glowCritical)" r="10"></circle>
+<circle cx="238" cy="678" fill="#ffffff" r="4"></circle>
+<!-- Marker Pin Card Tag -->
+<g transform="translate(140, 620)">
+<rect fill="#0f172a" height="28" rx="4" stroke="#ef4444" stroke-width="1.5" width="105"></rect>
+<text fill="#ffffff" font-family="Inter" font-size="11" font-weight="600" x="8" y="18">Kolonnawa (75%)</text>
+</g>
+</g>
+<!-- STATION 2: Sedawatta (Kelani River Lower) - HIGH -->
+<g class="station-node cursor-pointer group" data-station="sedawatta" tabindex="0">
+<circle cx="248" cy="670" fill="#ea580c" opacity="0.25" r="16">
+<animate attributename="r" dur="2.4s" repeatcount="indefinite" values="12;22;12"></animate>
+</circle>
+<circle cx="248" cy="670" fill="#ea580c" filter="url(#glowHigh)" r="8"></circle>
+<circle cx="248" cy="670" fill="#ffffff" r="3"></circle>
+<text fill="#fed7aa" font-family="JetBrains Mono" font-size="10" font-weight="500" x="258" y="666">Sedawatta</text>
+</g>
+<!-- STATION 3: Hanwella (Kelani Mid-Reach) - MODERATE -->
+<g class="station-node cursor-pointer group" data-station="hanwella" tabindex="0">
+<circle cx="288" cy="682" fill="#d97706" opacity="0.2" r="14"></circle>
+<circle cx="288" cy="682" fill="#d97706" filter="url(#glowModerate)" r="7.5"></circle>
+<circle cx="288" cy="682" fill="#ffffff" r="2.5"></circle>
+<text fill="#fef3c7" font-family="JetBrains Mono" font-size="10" x="298" y="686">Hanwella</text>
+</g>
+<!-- STATION 4: Ja-Ela (Gampaha) - MODERATE -->
+<g class="station-node cursor-pointer group" data-station="ja-ela" tabindex="0">
+<circle cx="236" cy="640" fill="#d97706" opacity="0.2" r="14"></circle>
+<circle cx="236" cy="640" fill="#d97706" filter="url(#glowModerate)" r="7.5"></circle>
+<circle cx="236" cy="640" fill="#ffffff" r="2.5"></circle>
+<text fill="#fef3c7" font-family="JetBrains Mono" font-size="10" x="180" y="642">Ja-Ela</text>
+</g>
+<!-- STATION 5: Ratnapura (Kalu Basin Upper) - HIGH -->
+<g class="station-node cursor-pointer group" data-station="ratnapura" tabindex="0">
+<circle cx="340" cy="735" fill="#ea580c" opacity="0.3" r="18">
+<animate attributename="r" dur="2.1s" repeatcount="indefinite" values="14;24;14"></animate>
+</circle>
+<circle cx="340" cy="735" fill="#ea580c" filter="url(#glowHigh)" r="8"></circle>
+<circle cx="340" cy="735" fill="#ffffff" r="3"></circle>
+<text fill="#fed7aa" font-family="JetBrains Mono" font-size="11" font-weight="600" x="352" y="738">Ratnapura (68%)</text>
+</g>
+<!-- STATION 6: Peradeniya (Kandy / Mahaweli) - LOW -->
+<g class="station-node cursor-pointer group" data-station="peradeniya" tabindex="0">
+<circle cx="410" cy="570" fill="#10b981" r="7"></circle>
+<circle cx="410" cy="570" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="422" y="574">Peradeniya</text>
+</g>
+<!-- STATION 7: Nawalapitiya (Central Highland) - LOW -->
+<g class="station-node cursor-pointer group" data-station="nawalapitiya" tabindex="0">
+<circle cx="388" cy="625" fill="#10b981" r="7"></circle>
+<circle cx="388" cy="625" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="300" y="625">Nawalapitiya</text>
+</g>
+<!-- STATION 8: Putupaula (Kalutara) - LOW -->
+<g class="station-node cursor-pointer group" data-station="putupaula" tabindex="0">
+<circle cx="260" cy="765" fill="#10b981" r="7"></circle>
+<circle cx="260" cy="765" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="188" y="775">Putupaula</text>
+</g>
+<!-- STATION 9: Baddegama (Galle / Gin) - LOW -->
+<g class="station-node cursor-pointer group" data-station="baddegama" tabindex="0">
+<circle cx="270" cy="855" fill="#10b981" r="7"></circle>
+<circle cx="270" cy="855" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="195" y="860">Baddegama</text>
+</g>
+<!-- STATION 10: Matara / Nilwala Estuary - LOW -->
+<g class="station-node cursor-pointer group" data-station="matara" tabindex="0">
+<circle cx="320" cy="925" fill="#10b981" r="7"></circle>
+<circle cx="320" cy="925" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="332" y="930">Matara</text>
+</g>
+<!-- STATION 11: Trincomalee Bay (Mahaweli Outflow) - LOW -->
+<g class="station-node cursor-pointer group" data-station="trincomalee" tabindex="0">
+<circle cx="585" cy="245" fill="#10b981" r="7"></circle>
+<circle cx="585" cy="245" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="500" y="240">Trincomalee</text>
+</g>
+<!-- STATION 12: Kurunegala (Deduru Oya Basin) - LOW -->
+<g class="station-node cursor-pointer group" data-station="kurunegala" tabindex="0">
+<circle cx="325" cy="510" fill="#10b981" r="7"></circle>
+<circle cx="325" cy="510" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="240" y="510">Kurunegala</text>
+</g>
+<!-- STATION 13: Polonnaruwa - LOW -->
+<g class="station-node cursor-pointer group" data-station="polonnaruwa" tabindex="0">
+<circle cx="505" cy="415" fill="#10b981" r="7"></circle>
+<circle cx="505" cy="415" fill="#ffffff" r="2.5"></circle>
+<text fill="#a7f3d0" font-family="JetBrains Mono" font-size="10" x="518" y="415">Polonnaruwa</text>
+</g>
+</svg>
+<!-- Floating Map Interactive Controls (Top-Left overlay) -->
+<div class="absolute top-4 left-4 z-20 flex flex-col gap-1 bg-surface-container-lowest/90 backdrop-blur-md p-1 rounded-lg shadow-md">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container text-on-surface transition-colors" id="zoomInBtn" title="Zoom In">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container text-on-surface transition-colors" id="zoomOutBtn" title="Zoom Out">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<div class="w-full h-[1px] bg-surface-container my-0.5"></div>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container text-on-surface transition-colors" id="recenterBtn" title="Center Sri Lanka">
+<span class="material-symbols-outlined text-[18px]">my_location</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container text-on-surface transition-colors" id="resetViewBtn" title="Reset View">
+<span class="material-symbols-outlined text-[18px]">restart_alt</span>
+</button>
+</div>
+<!-- Live Precipitation Overlay Indicator Badge -->
+<div class="absolute top-4 left-16 z-20 hidden md:flex items-center gap-2 px-space-md py-1.5 rounded-lg bg-primary-container text-on-primary shadow-md">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+<span class="font-label-md text-label-md tracking-wider uppercase">ECMWF / Open-Meteo Doppler Feed Active</span>
+</div>
+<!-- Floating Map Legend (Bottom-Left) -->
+<div class="absolute bottom-4 left-4 z-20 bg-surface-container-lowest/95 backdrop-blur-md p-space-md rounded-xl shadow-lg max-w-sm flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-lg text-label-lg font-bold text-on-surface uppercase tracking-wider">Telemetry Legend</span>
+<span class="font-data-timestamp text-data-timestamp text-secondary font-medium">RF-v1.0</span>
+</div>
+<!-- Severity Levels -->
+<div class="grid grid-cols-2 gap-x-space-md gap-y-1">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Low (&lt;35%)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Moderate (35-65%)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+<span class="font-body-sm text-body-sm text-on-surface">High (65-80%)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse"></span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Critical (&gt;80%)</span>
+</div>
+</div>
+<!-- Metrics Summary footer within legend -->
+<div class="pt-1 mt-1 border-t border-surface-container flex items-center justify-between text-on-surface-variant font-data-timestamp text-data-timestamp">
+<span>33 Active Stations</span>
+<span>5 Monitored Basins</span>
+</div>
+</div>
+<!-- Bottom Right Coordinate Box -->
+<div class="absolute bottom-4 right-4 z-20 hidden sm:flex items-center gap-2 bg-surface-container-lowest/80 backdrop-blur-md px-2.5 py-1 rounded text-on-surface-variant font-data-timestamp text-data-timestamp">
+<span>CRS: EPSG:4326</span>
+<span>•</span>
+<span id="coordDisplay">6.9271° N, 79.8825° E</span>
+</div>
+</div>
+</div>
+<!-- Right Desktop Inspection Sidebar (4 Columns on desktop) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md" id="detailPanel">
+<!-- Primary Selected Station Telemetry Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md relative overflow-hidden">
+<!-- Top Accent Stripe -->
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600"></div>
+<!-- Station Header Segment -->
+<div class="flex items-start justify-between gap-space-sm pt-1">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-outline uppercase tracking-wider">Station Focus</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold" id="panelStationName">Kolonnawa</h2>
+<span class="font-body-sm text-body-sm text-secondary font-medium" id="panelBasinName">Kelani River Lower Reach</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-2.5 py-1 rounded font-label-md text-label-md font-bold uppercase bg-orange-100 text-orange-800 flex items-center gap-1.5 shadow-sm" id="panelRiskBadge">
+<span class="w-2 h-2 rounded-full bg-orange-600"></span>
+<span>High Risk</span>
+</span>
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant mt-1">ID: ST-KLN-04</span>
+</div>
+</div>
+<!-- Geolocation Coordinates Strip -->
+<div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-2 rounded text-on-surface-variant font-data-metric text-data-metric">
+<span class="material-symbols-outlined text-secondary text-[16px]">location_on</span>
+<span id="panelDistrict">Colombo District (Lat: 6.9271° N, Lon: 79.8825° E)</span>
+</div>
+<!-- Primary Risk Prediction Gauge -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-xs">
+<div class="flex items-baseline justify-between">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Flood Inundation Probability</span>
+<span class="font-data-display text-data-display text-orange-600 font-bold" id="panelProbabilityNumber">75.53%</span>
+</div>
+<!-- Progress Meter Bar with Tier Divisions -->
+<div class="w-full bg-surface-container-high h-3 rounded-full overflow-hidden relative flex">
+<div class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 rounded-full transition-all duration-700" id="panelProbabilityBar" style="width: 75.53%;"></div>
+</div>
+<div class="flex justify-between font-data-timestamp text-data-timestamp text-outline px-0.5">
+<span>0% Baseline</span>
+<span>35% Moderate</span>
+<span>65% High</span>
+<span>100% Extreme</span>
+</div>
+</div>
+<!-- Key Hydrological Drivers Matrix -->
+<div class="flex flex-col gap-2">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Primary Risk Drivers</span>
+<div class="grid grid-cols-3 gap-2">
+<div class="bg-surface-container-low p-2.5 rounded flex flex-col">
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant">7-Day Rain</span>
+<span class="font-data-metric text-data-metric text-on-surface font-bold mt-1" id="panelRain7">18.6 mm</span>
+<span class="font-data-timestamp text-data-timestamp text-orange-600 mt-0.5">▲ +12% vs avg</span>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded flex flex-col">
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant">30-Day Rain</span>
+<span class="font-data-metric text-data-metric text-on-surface font-bold mt-1" id="panelRain30">84.2 mm</span>
+<span class="font-data-timestamp text-data-timestamp text-orange-600 mt-0.5">▲ Saturated</span>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded flex flex-col">
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant">Discharge</span>
+<span class="font-data-metric text-data-metric text-on-surface font-bold mt-1" id="panelDischarge">12.4 m³/s</span>
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant mt-0.5">Critical &gt;14.0</span>
+</div>
+</div>
+</div>
+<!-- Current Real-Time Atmospheric Conditions -->
+<div class="flex flex-col gap-2">
+<span class="font-label-lg text-label-lg text-on-surface font-semibold">Atmospheric In-Situ Metrics</span>
+<div class="grid grid-cols-3 gap-2">
+<div class="flex items-center gap-2 p-2 bg-surface-container-low rounded">
+<span class="material-symbols-outlined text-secondary text-[18px]">thermostat</span>
+<div class="flex flex-col">
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant">Temp</span>
+<span class="font-data-metric text-data-metric font-semibold text-on-surface" id="panelTemp">24.2°C</span>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 bg-surface-container-low rounded">
+<span class="material-symbols-outlined text-secondary text-[18px]">humidity_mid</span>
+<div class="flex flex-col">
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant">Humidity</span>
+<span class="font-data-metric text-data-metric font-semibold text-on-surface" id="panelHumidity">96%</span>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 bg-surface-container-low rounded">
+<span class="material-symbols-outlined text-secondary text-[18px]">air</span>
+<div class="flex flex-col">
+<span class="font-data-timestamp text-data-timestamp text-on-surface-variant">Wind</span>
+<span class="font-data-metric text-data-metric font-semibold text-on-surface" id="panelWind">6.4 km/h</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Integrity & Model Metadata -->
+<div class="flex items-center justify-between p-2 bg-surface-container-low rounded font-data-timestamp text-data-timestamp text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span>Updated: 11:21 PM</span>
+</div>
+<span>Source: Open-Meteo API</span>
+</div>
+<!-- Primary & Secondary Interactive Action CTAs -->
+<div class="flex flex-col gap-2 pt-space-xs">
+<a class="w-full py-2.5 bg-primary hover:bg-primary-container text-on-primary rounded font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm" href="#">
+<span>View Full Location Telemetry</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+<button class="w-full py-2 bg-surface-container-low hover:bg-surface-container text-on-surface rounded font-label-lg text-label-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm" id="alertNoticeBtn">
+<span class="material-symbols-outlined text-[16px] text-secondary">notifications_active</span>
+<span>Set Alert Notification</span>
+</button>
+</div>
+</div>
+<!-- Quick Catchment River Stage Sensor Summary Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-lg text-label-lg font-semibold text-on-surface">Monitored Basins Quick Stage</span>
+<span class="font-data-timestamp text-data-timestamp text-secondary">Live Matrix</span>
+</div>
+<div class="flex flex-col gap-2 mt-1">
+<!-- Kelani Reach -->
+<div class="flex flex-col gap-1 p-2 bg-surface-container-low rounded">
+<div class="flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<span class="font-medium">Kelani Ganga</span>
+<span class="font-data-metric text-data-metric text-orange-600 font-bold">5.82m / Warning 5.50m</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="h-full bg-orange-500 rounded-full" style="width: 82%;"></div>
+</div>
+</div>
+<!-- Kalu Reach -->
+<div class="flex flex-col gap-1 p-2 bg-surface-container-low rounded">
+<div class="flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<span class="font-medium">Kalu Ganga (Ratnapura)</span>
+<span class="font-data-metric text-data-metric text-amber-600 font-semibold">4.90m / Warning 5.20m</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="h-full bg-amber-500 rounded-full" style="width: 68%;"></div>
+</div>
+</div>
+<!-- Mahaweli Reach -->
+<div class="flex flex-col gap-1 p-2 bg-surface-container-low rounded">
+<div class="flex items-center justify-between text-on-surface font-body-sm text-body-sm">
+<span class="font-medium">Mahaweli Ganga (Peradeniya)</span>
+<span class="font-data-metric text-data-metric text-emerald-700 font-semibold">2.14m / Normal</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 28%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-Side GIS Map Controller Script -->
+<script>
+    (function() {
+      // Station registry dataset
+      const stationDatabase = {
+        kolonnawa: {
+          name: "Kolonnawa",
+          basin: "Kelani River Lower Reach",
+          district: "Colombo District (Lat: 6.9271° N, Lon: 79.8825° E)",
+          riskStatus: "High Risk",
+          riskBadgeBg: "bg-orange-100 text-orange-800",
+          riskDot: "bg-orange-600",
+          probability: "75.53%",
+          probColor: "text-orange-600",
+          barWidth: "75.53%",
+          rain7: "18.6 mm",
+          rain30: "84.2 mm",
+          discharge: "12.4 m³/s",
+          temp: "24.2°C",
+          humidity: "96%",
+          wind: "6.4 km/h"
+        },
+        sedawatta: {
+          name: "Sedawatta",
+          basin: "Kelani River Lower Basin",
+          district: "Colombo District (Lat: 6.9442° N, Lon: 79.8812° E)",
+          riskStatus: "High Risk",
+          riskBadgeBg: "bg-orange-100 text-orange-800",
+          riskDot: "bg-orange-600",
+          probability: "71.20%",
+          probColor: "text-orange-600",
+          barWidth: "71.20%",
+          rain7: "17.9 mm",
+          rain30: "81.0 mm",
+          discharge: "11.8 m³/s",
+          temp: "24.5°C",
+          humidity: "94%",
+          wind: "5.8 km/h"
+        },
+        hanwella: {
+          name: "Hanwella",
+          basin: "Kelani River Middle Reach",
+          district: "Colombo District (Lat: 6.9032° N, Lon: 80.0814° E)",
+          riskStatus: "Moderate Risk",
+          riskBadgeBg: "bg-amber-100 text-amber-800",
+          riskDot: "bg-amber-600",
+          probability: "54.80%",
+          probColor: "text-amber-600",
+          barWidth: "54.80%",
+          rain7: "14.2 mm",
+          rain30: "66.5 mm",
+          discharge: "8.9 m³/s",
+          temp: "23.9°C",
+          humidity: "91%",
+          wind: "4.2 km/h"
+        },
+        "ja-ela": {
+          name: "Ja-Ela",
+          basin: "Dandugam Oya Catchment",
+          district: "Gampaha District (Lat: 7.0754° N, Lon: 79.8911° E)",
+          riskStatus: "Moderate Risk",
+          riskBadgeBg: "bg-amber-100 text-amber-800",
+          riskDot: "bg-amber-600",
+          probability: "48.30%",
+          probColor: "text-amber-600",
+          barWidth: "48.30%",
+          rain7: "12.5 mm",
+          rain30: "58.0 mm",
+          discharge: "6.2 m³/s",
+          temp: "25.1°C",
+          humidity: "89%",
+          wind: "7.1 km/h"
+        },
+        ratnapura: {
+          name: "Ratnapura",
+          basin: "Kalu River Upper Basin",
+          district: "Ratnapura District (Lat: 6.6828° N, Lon: 80.4036° E)",
+          riskStatus: "High Risk",
+          riskBadgeBg: "bg-orange-100 text-orange-800",
+          riskDot: "bg-orange-600",
+          probability: "68.45%",
+          probColor: "text-orange-600",
+          barWidth: "68.45%",
+          rain7: "22.4 mm",
+          rain30: "102.1 mm",
+          discharge: "15.1 m³/s",
+          temp: "22.8°C",
+          humidity: "98%",
+          wind: "3.2 km/h"
+        },
+        peradeniya: {
+          name: "Peradeniya",
+          basin: "Mahaweli River Upper Basin",
+          district: "Kandy District (Lat: 7.2605° N, Lon: 80.5960° E)",
+          riskStatus: "Low Risk",
+          riskBadgeBg: "bg-emerald-100 text-emerald-800",
+          riskDot: "bg-emerald-600",
+          probability: "18.20%",
+          probColor: "text-emerald-600",
+          barWidth: "18.20%",
+          rain7: "4.8 mm",
+          rain30: "24.5 mm",
+          discharge: "3.1 m³/s",
+          temp: "20.4°C",
+          humidity: "82%",
+          wind: "3.9 km/h"
+        },
+        putupaula: {
+          name: "Putupaula",
+          basin: "Kalu Ganga Lower Reach",
+          district: "Kalutara District (Lat: 6.6111° N, Lon: 80.0528° E)",
+          riskStatus: "Low Risk",
+          riskBadgeBg: "bg-emerald-100 text-emerald-800",
+          riskDot: "bg-emerald-600",
+          probability: "24.15%",
+          probColor: "text-emerald-600",
+          barWidth: "24.15%",
+          rain7: "6.2 mm",
+          rain30: "38.7 mm",
+          discharge: "4.5 m³/s",
+          temp: "25.6°C",
+          humidity: "86%",
+          wind: "8.2 km/h"
+        },
+        baddegama: {
+          name: "Baddegama",
+          basin: "Gin River Catchment",
+          district: "Galle District (Lat: 6.1872° N, Lon: 80.1983° E)",
+          riskStatus: "Low Risk",
+          riskBadgeBg: "bg-emerald-100 text-emerald-800",
+          riskDot: "bg-emerald-600",
+          probability: "16.80%",
+          probColor: "text-emerald-600",
+          barWidth: "16.80%",
+          rain7: "3.9 mm",
+          rain30: "29.1 mm",
+          discharge: "2.8 m³/s",
+          temp: "26.1°C",
+          humidity: "84%",
+          wind: "7.5 km/h"
+        },
+        nawalapitiya: {
+          name: "Nawalapitiya",
+          basin: "Mahaweli Highland Reach",
+          district: "Kandy/Nuwara Eliya (Lat: 7.0489° N, Lon: 80.5342° E)",
+          riskStatus: "Low Risk",
+          riskBadgeBg: "bg-emerald-100 text-emerald-800",
+          riskDot: "bg-emerald-600",
+          probability: "19.70%",
+          probColor: "text-emerald-600",
+          barWidth: "19.70%",
+          rain7: "5.5 mm",
+          rain30: "31.2 mm",
+          discharge: "3.0 m³/s",
+          temp: "19.2°C",
+          humidity: "88%",
+          wind: "4.8 km/h"
+        }
+      };
+
+      // Handle station click event
+      const stationNodes = document.querySelectorAll('.station-node');
+      stationNodes.forEach(node => {
+        node.addEventListener('click', () => {
+          const key = node.getAttribute('data-station');
+          const data = stationDatabase[key];
+          if (!data) return;
+
+          // Update sidebar elements
+          document.getElementById('panelStationName').textContent = data.name;
+          document.getElementById('panelBasinName').textContent = data.basin;
+          document.getElementById('panelDistrict').textContent = data.district;
+          
+          const badge = document.getElementById('panelRiskBadge');
+          badge.className = `px-2.5 py-1 rounded font-label-md text-label-md font-bold uppercase ${data.riskBadgeBg} flex items-center gap-1.5 shadow-sm`;
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full ${data.riskDot}"></span><span>${data.riskStatus}</span>`;
+
+          const probNumber = document.getElementById('panelProbabilityNumber');
+          probNumber.textContent = data.probability;
+          probNumber.className = `font-data-display text-data-display font-bold ${data.probColor}`;
+
+          document.getElementById('panelProbabilityBar').style.width = data.barWidth;
+          document.getElementById('panelRain7').textContent = data.rain7;
+          document.getElementById('panelRain30').textContent = data.rain30;
+          document.getElementById('panelDischarge').textContent = data.discharge;
+          document.getElementById('panelTemp').textContent = data.temp;
+          document.getElementById('panelHumidity').textContent = data.humidity;
+          document.getElementById('panelWind').textContent = data.wind;
+
+          // Update coordinate preview in map corner
+          const coordMatch = data.district.match(/\((.*?)\)/);
+          if (coordMatch) {
+            document.getElementById('coordDisplay').textContent = coordMatch[1];
+          }
+        });
+      });
+
+      // Filter pills switching
+      const filterPills = document.querySelectorAll('.filter-pill');
+      filterPills.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterPills.forEach(b => {
+            b.classList.remove('bg-surface-container-lowest', 'text-on-surface', 'font-semibold', 'shadow-sm');
+            b.classList.add('text-on-surface-variant');
+          });
+          btn.classList.add('bg-surface-container-lowest', 'text-on-surface', 'font-semibold', 'shadow-sm');
+          btn.classList.remove('text-on-surface-variant');
+        });
+      });
+
+      // Map Zoom and Pan micro-interactions
+      let zoomLevel = 1;
+      const mapSvg = document.getElementById('sriLankaMapSvg');
+      
+      document.getElementById('zoomInBtn').addEventListener('click', () => {
+        zoomLevel = Math.min(zoomLevel + 0.25, 2.2);
+        mapSvg.style.transform = `scale(${zoomLevel})`;
+      });
+
+      document.getElementById('zoomOutBtn').addEventListener('click', () => {
+        zoomLevel = Math.max(zoomLevel - 0.25, 0.85);
+        mapSvg.style.transform = `scale(${zoomLevel})`;
+      });
+
+      document.getElementById('resetViewBtn').addEventListener('click', () => {
+        zoomLevel = 1;
+        mapSvg.style.transform = `scale(1)`;
+      });
+
+      document.getElementById('recenterBtn').addEventListener('click', () => {
+        zoomLevel = 1.1;
+        mapSvg.style.transform = `scale(1.1)`;
+      });
+
+      // Simple search interaction
+      document.getElementById('stationSearch').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        stationNodes.forEach(node => {
+          const st = node.getAttribute('data-station');
+          if (!query || st.includes(query)) {
+            node.style.opacity = '1';
+          } else {
+            node.style.opacity = '0.2';
+          }
+        });
+      });
+
+      // Quick Alert Button notification feedback
+      document.getElementById('alertNoticeBtn').addEventListener('click', function() {
+        const originalText = this.innerHTML;
+        this.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-600">check_circle</span><span class="text-emerald-700">Subscribed to Push Alerts</span>`;
+        setTimeout(() => {
+          this.innerHTML = originalText;
+        }, 3000);
+      });
+
+      // Refresh button spinner micro-interaction
+      const refreshBtn = document.getElementById('refreshDataBtn');
+      refreshBtn.addEventListener('click', () => {
+        const icon = refreshBtn.querySelector('.material-symbols-outlined');
+        icon.classList.add('animate-spin');
+        setTimeout(() => {
+          icon.classList.remove('animate-spin');
+        }, 1200);
+      });
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest border-t border-surface-container py-space-md"><div class="w-full px-margin-lg flex flex-col md:flex-row items-center justify-between gap-space-sm text-center md:text-left"><div class="flex flex-wrap items-center justify-center md:justify-start gap-x-space-sm gap-y-1 font-label-md text-label-md text-on-surface-variant"><span class="font-semibold text-on-surface">Sri Lanka FloodWatch</span><span class="text-outline-variant">•</span><span>Live data source: Open-Meteo</span><span class="text-outline-variant">•</span><span class="font-data-timestamp text-data-timestamp">ML model: Random Forest Classifier v1.0.0</span><span class="text-outline-variant">•</span><span class="font-data-timestamp text-data-timestamp">Updated: 11:21 PM</span></div><div class="font-body-sm text-body-sm text-outline max-w-2xl text-center md:text-right"><p>Prototype early flood-risk monitoring system built for YCS Competition. Predictions are model-based and should not replace official emergency guidance.</p></div></div></footer></body></html>
