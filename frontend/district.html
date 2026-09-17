@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Sri Lanka FloodWatch — Location Telemetry &amp; Inundation Analysis</title>
+  <meta name="description" content="In-depth hydrometeorological telemetry, feature vectors, and real-time AI flood risk analysis for monitored Sri Lankan locations."/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/district.css"/>
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('floodwatch_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-background font-body-md text-on-background min-h-screen flex flex-col antialiased">
+  
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <span class="material-symbols-outlined text-[20px]">water</span>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title-row">
+            <span class="brand-title">Sri Lanka FloodWatch</span>
+            <span class="brand-badge">AI/ML</span>
+          </div>
+          <span class="brand-subtitle">Live Early Flood Risk Prediction</span>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a class="nav-link" data-path="live-dashboard" href="index.html">Live Dashboard</a>
+        <a class="nav-link" data-path="flood-map" href="map.html">Flood Map</a>
+        <a class="nav-link active" data-path="location-details" href="district.html" aria-current="page">Location Details</a>
+        <a class="nav-link" data-path="alerts-history" href="alerts.html">Alerts &amp; History</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <div class="header-telemetry">
+          <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>LIVE DATA</span>
+          </div>
+          <span class="header-divider">|</span>
+          <div class="header-item">
+            <span class="material-symbols-outlined">schedule</span>
+            <span id="liveClock" class="header-live-time">11:21 PM</span>
+          </div>
+          <span class="header-divider">|</span>
+          <div class="header-item">
+            <span class="material-symbols-outlined">cloud_sync</span>
+            <span>Open-Meteo</span>
+          </div>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark / Light Mode" aria-label="Toggle theme mode" onclick="window.toggleTheme()">
+          <span class="material-symbols-outlined text-[18px]">dark_mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="flex flex-col gap-6">
+      
+      <!-- Top Utility: Breadcrumb & Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <nav class="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
+          <a class="flex items-center gap-1 hover:text-secondary transition-colors font-semibold" href="map.html">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Back to Map</span>
+          </a>
+          <span class="text-outline-variant font-data-timestamp">/</span>
+          <span id="crumbDistrict" class="hover:text-on-surface transition-colors">Colombo District</span>
+          <span class="text-outline-variant font-data-timestamp">/</span>
+          <span id="crumbStation" class="text-on-surface font-semibold bg-surface-container-high px-2 py-0.5 rounded">Kolonnawa</span>
+        </nav>
+        
+        <div class="flex items-center gap-2 font-label-md text-label-md">
+          <button id="btnExportCsv" class="btn btn-secondary btn-sm">
+            <span class="material-symbols-outlined text-[15px] text-secondary">file_download</span>
+            <span>Export Hydrometric Log (CSV)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Station Header Banner -->
+      <section class="station-header-banner">
+        <div class="banner-glow"></div>
+        <div class="flex flex-col gap-1.5 z-10">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="stationUnitTag" class="font-label-md text-label-md uppercase tracking-wider text-secondary font-bold">Catchment Unit LK-LOC-001</span>
+            <span class="font-data-timestamp text-data-timestamp text-outline">•</span>
+            <span id="stationDistrictTag" class="font-label-md text-label-md text-on-surface-variant font-medium">Colombo District</span>
+            <span class="inline-flex items-center gap-1.5 bg-surface-container px-2 py-0.5 rounded text-secondary font-label-md text-label-md font-semibold">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-container opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+              </span>
+              LIVE TELEMETRY (Open-Meteo Feed)
+            </span>
+          </div>
+          
+          <h1 id="stationTitle" class="font-display-lg text-display-lg text-on-surface tracking-tight">
+            Kolonnawa Station <span class="font-headline-lg text-headline-lg text-outline font-normal">(Kelani River Lower Basin)</span>
+          </h1>
+
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-data-timestamp text-data-timestamp text-on-surface-variant">
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">location_on</span>
+              <span id="stationCoords">6.9271° N, 79.8825° E</span>
+            </div>
+            <span class="text-outline-variant">•</span>
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">height</span>
+              <span id="stationElevation">Elevation: 4.5m ASL</span>
+            </div>
+            <span class="text-outline-variant">•</span>
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">sensors</span>
+              <span id="stationSensorArray">Sensor Array ID: LK-LOC-001</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Horizon Pill Toggle -->
+        <div class="flex items-center bg-surface-container-low p-1 rounded-lg z-10 shrink-0 self-start lg:self-center">
+          <span class="px-3 py-1 rounded font-label-md text-label-md bg-surface-container-lowest text-on-surface font-semibold shadow-sm">Realtime (Now)</span>
+          <span class="px-3 py-1 rounded font-label-md text-label-md text-on-surface-variant">24-48h Horizon</span>
+        </div>
+      </section>
+
+      <!-- Row 1: Primary AI Risk Engine Bento Banner -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Flood Probability Meter & Class -->
+        <div class="lg:col-span-8 card flex flex-col justify-between gap-4 relative overflow-hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Predictive Assessment Horizon (T + 24-48h)</span>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="font-headline-lg text-headline-lg text-on-surface">Automated Inundation Hazard Rating</span>
+                <span id="detailRiskBadge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-lg text-label-lg font-bold">
+                  <span class="h-2 w-2 rounded-full bg-error animate-pulse"></span>
+                  HIGH RISK
+                </span>
+              </div>
+            </div>
+            <div class="text-left sm:text-right">
+              <span class="font-label-md text-label-md text-outline block">Model Architecture</span>
+              <span class="font-data-timestamp text-data-timestamp font-semibold text-secondary">RandomForestClassifier v1.0.0</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center py-2">
+            <!-- Radial Progress Gauge -->
+            <div class="sm:col-span-5 flex flex-col items-center justify-center relative">
+              <div class="radial-gauge-wrapper">
+                <svg class="radial-gauge-svg" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="50" fill="transparent" stroke="#e2e8f0" stroke-width="10"></circle>
+                  <circle id="radialGaugeCircle" cx="60" cy="60" fill="transparent" stroke="#f97316" stroke-width="10" stroke-dasharray="314.16" stroke-dashoffset="76.88" stroke-linecap="round"></circle>
+                </svg>
+                <div class="radial-gauge-center">
+                  <span id="radialGaugeNumber" class="font-data-display text-display-lg leading-none font-bold text-on-surface">75.53<span class="text-headline-sm font-normal">%</span></span>
+                  <span class="font-label-md text-label-md text-on-surface-variant font-medium mt-1">Inundation Risk</span>
+                </div>
+              </div>
+              <span class="font-data-timestamp text-data-timestamp text-outline mt-2 text-center">Validation ROC-AUC: 0.994 (Ref)</span>
+            </div>
+
+            <!-- Semantic Classification Matrix -->
+            <div class="sm:col-span-7 flex flex-col gap-2 bg-surface-container-low p-4 rounded-xl">
+              <div class="flex items-start justify-between pb-1">
+                <div>
+                  <span class="font-label-md text-label-md text-outline uppercase tracking-wider block">ML Classification Result</span>
+                  <span id="classificationLabel" class="font-headline-sm text-headline-sm text-error font-bold flex items-center gap-1.5 mt-0.5">
+                    <span class="material-symbols-outlined text-[18px]">warning</span>
+                    Class 1 (Flood Hazard Likely within 24-48h)
+                  </span>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-data-timestamp text-data-timestamp font-semibold">Trained Hydro-Meteo Model</span>
+              </div>
+              <p id="classificationDesc" class="font-body-sm text-body-sm text-on-surface-variant">
+                The random forest decision boundary identifies heavy antecedent watershed saturation paired with low elevation and constrained drainage runoff.
+              </p>
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <div class="bg-surface-container-lowest p-2.5 rounded shadow-sm">
+                  <span class="font-label-md text-label-md text-outline block">Data Pipeline Integrity</span>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="material-symbols-outlined text-[16px] text-secondary">verified</span>
+                    <span id="classificationDataQuality" class="font-label-lg text-label-lg font-bold text-on-surface">GOOD (64/64 Features)</span>
+                  </div>
+                </div>
+                <div class="bg-surface-container-lowest p-2.5 rounded shadow-sm">
+                  <span class="font-label-md text-label-md text-outline block">Model Execution Status</span>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="material-symbols-outlined text-[16px] text-secondary">check_circle</span>
+                    <span class="font-label-lg text-label-lg font-bold text-on-surface">Real-Time Sync</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 font-data-timestamp text-data-timestamp text-outline border-t border-surface-container">
+            <span>Inference Latency: 42ms</span>
+            <span>Open-Meteo API Telemetry</span>
+            <span>Model: RandomForestClassifier v1.0.0</span>
+          </div>
+        </div>
+
+        <!-- Station Elevation / River Proximity Card -->
+        <div class="lg:col-span-4 card flex flex-col justify-between gap-3">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Basin Hydrological Vector</span>
+              <span class="px-2 py-0.5 rounded bg-surface-container text-secondary font-label-md text-label-md font-semibold">Sensor Node</span>
+            </div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">River Channel Proximity</h3>
+          </div>
+
+          <div class="bg-surface-container-low p-3 rounded-lg flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-[24px]">water</span>
+              <div class="flex flex-col">
+                <span id="channelLocation" class="font-headline-sm text-headline-sm text-on-surface font-semibold">Kolonnawa (Colombo)</span>
+                <span id="channelDistance" class="font-data-timestamp text-data-timestamp text-outline">Distance to River: 220m</span>
+              </div>
+            </div>
+            <div class="pt-2 border-t border-surface-container font-data-timestamp text-data-timestamp flex justify-between">
+              <span id="channelElevation">Elevation: 4.5m ASL</span>
+              <span class="text-secondary font-semibold">Immediate Basin Reach</span>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div class="flex justify-between items-center font-body-sm text-body-sm">
+              <span class="text-on-surface-variant">Topographic Lowland Index:</span>
+              <span class="font-data-metric text-data-metric font-semibold text-error">High Susceptibility</span>
+            </div>
+            <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden flex">
+              <div class="bg-secondary h-full" style="width: 70%"></div>
+              <div class="bg-error h-full" style="width: 20%"></div>
+              <div class="bg-surface-container-highest h-full" style="width: 10%"></div>
+            </div>
+            <div class="flex justify-between font-data-timestamp text-data-timestamp text-outline">
+              <span>Highland (&gt;20m)</span>
+              <span>Midland (10-20m)</span>
+              <span class="font-semibold text-error">Lowland (&lt;10m)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 2: Live Sensor Telemetry Strip (5 Weather Cards) -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-secondary">sensors_krx</span>
+            <h2 class="font-headline-sm text-headline-sm text-on-surface">Current Synoptic Conditions</h2>
+            <span class="font-data-timestamp text-data-timestamp text-outline font-normal">(Automated Ground Telemetry)</span>
+          </div>
+          <span class="font-data-timestamp text-data-timestamp text-secondary font-medium">Sampling: Live API Telemetry</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <!-- Metric 1: Temperature -->
+          <div class="card p-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-on-surface-variant">
+              <span class="font-label-md text-label-md font-semibold text-outline uppercase">Ambient Temp</span>
+              <span class="material-symbols-outlined text-[18px] text-secondary">thermostat</span>
+            </div>
+            <div class="my-2">
+              <div class="flex items-baseline gap-1">
+                <span id="metricTemp" class="font-data-display text-data-display font-bold text-on-surface">24.2</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">°C</span>
+              </div>
+            </div>
+            <span class="font-data-timestamp text-data-timestamp text-secondary font-medium">Open-Meteo In-Situ</span>
+          </div>
+
+          <!-- Metric 2: Humidity -->
+          <div class="card p-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-on-surface-variant">
+              <span class="font-label-md text-label-md font-semibold text-outline uppercase">Rel Humidity</span>
+              <span class="material-symbols-outlined text-[18px] text-secondary">humidity_high</span>
+            </div>
+            <div class="my-2">
+              <div class="flex items-baseline gap-1">
+                <span id="metricHumidity" class="font-data-display text-data-display font-bold text-on-surface">96</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">%</span>
+              </div>
+            </div>
+            <span class="font-data-timestamp text-data-timestamp text-secondary font-medium">Relative Saturation</span>
+          </div>
+
+          <!-- Metric 3: Live Rain -->
+          <div class="card p-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-on-surface-variant">
+              <span class="font-label-md text-label-md font-semibold text-outline uppercase">Live Rain</span>
+              <span class="material-symbols-outlined text-[18px] text-secondary">rainy</span>
+            </div>
+            <div class="my-2">
+              <div class="flex items-baseline gap-1">
+                <span id="metricRain" class="font-data-display text-data-display font-bold text-on-surface">0.0</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">mm/h</span>
+              </div>
+            </div>
+            <span class="font-data-timestamp text-data-timestamp text-outline">Current Precipitation</span>
+          </div>
+
+          <!-- Metric 4: Wind Speed -->
+          <div class="card p-3 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-on-surface-variant">
+              <span class="font-label-md text-label-md font-semibold text-outline uppercase">Surface Wind</span>
+              <span class="material-symbols-outlined text-[18px] text-secondary">air</span>
+            </div>
+            <div class="my-2">
+              <div class="flex items-baseline gap-1">
+                <span id="metricWind" class="font-data-display text-data-display font-bold text-on-surface">6.4</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">km/h</span>
+              </div>
+            </div>
+            <span class="font-data-timestamp text-data-timestamp text-secondary font-medium">Synoptic Feed</span>
+          </div>
+
+          <!-- Metric 5: River Discharge -->
+          <div class="card p-3 flex flex-col justify-between col-span-2 md:col-span-1">
+            <div class="flex items-center justify-between text-on-surface-variant">
+              <span class="font-label-md text-label-md font-semibold text-outline uppercase">River Discharge</span>
+              <span class="material-symbols-outlined text-[18px] text-secondary">water</span>
+            </div>
+            <div class="my-2">
+              <div class="flex items-baseline gap-1">
+                <span id="metricDischarge" class="font-data-display text-data-display font-bold text-on-surface">12.4</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">m³/s</span>
+              </div>
+            </div>
+            <span class="font-data-timestamp text-data-timestamp text-secondary font-medium">GloFAS / Catchment</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 3: Precipitation Analytics & Environmental Factors -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Rainfall Trend & Hydrological Summary (7 Cols) -->
+        <div class="lg:col-span-7 card flex flex-col justify-between gap-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Precipitation Accumulation</span>
+              <h3 class="font-headline-sm text-headline-sm text-on-surface">Rolling Rainfall Telemetry</h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="bg-surface-container-low px-3 py-1.5 rounded flex items-center gap-1.5">
+                <span class="font-label-md text-label-md text-outline">7-Day:</span>
+                <span id="detailRain7" class="font-data-metric text-data-metric font-bold text-on-surface">18.6 mm</span>
+              </div>
+              <div class="bg-surface-container-low px-3 py-1.5 rounded flex items-center gap-1.5">
+                <span class="font-label-md text-label-md text-outline">30-Day:</span>
+                <span id="detailRain30" class="font-data-metric text-data-metric font-bold text-on-surface">84.2 mm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metric summary callout -->
+          <div class="p-3 bg-surface-container-low rounded-lg flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-[18px]">history_toggle_off</span>
+              <span class="font-body-sm text-body-sm text-on-surface font-medium">Max Daily Rainfall: <strong id="detailMaxDailyRain" class="font-semibold text-on-surface">12.2 mm</strong></span>
+            </div>
+            <span class="font-data-timestamp text-data-timestamp text-outline">Calculated from 168h rolling history</span>
+          </div>
+
+          <!-- Telemetry Bars -->
+          <div class="flex flex-col gap-3 py-2">
+            <div>
+              <div class="flex justify-between font-label-md text-label-md mb-1">
+                <span class="text-on-surface font-semibold">7-Day Cumulative Runoff</span>
+                <span class="font-data-metric text-data-metric text-secondary font-bold">168h Aggregation</span>
+              </div>
+              <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+                <div class="bg-secondary h-full rounded-full" style="width: 45%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between font-label-md text-label-md mb-1">
+                <span class="text-on-surface font-semibold">30-Day Soil Saturation Index</span>
+                <span class="font-data-metric text-data-metric text-secondary font-bold">720h Baseline</span>
+              </div>
+              <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
+                <div class="bg-secondary-container h-full rounded-full" style="width: 65%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <span class="font-data-timestamp text-data-timestamp text-outline">
+            * Cumulative rainfall data synthesized without precipitation double-counting.
+          </span>
+        </div>
+
+        <!-- Static Environmental & Geospatial Data Matrix (5 Cols) -->
+        <div class="lg:col-span-5 card flex flex-col justify-between gap-3">
+          <div>
+            <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Geospatial Vulnerability Attributes</span>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Basin Surface &amp; Demographics</h3>
+          </div>
+
+          <div class="vulnerability-grid">
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Elevation (ASL)</span>
+              <span id="vulnElevation" class="font-data-metric text-data-metric font-bold text-on-surface">4.5 m</span>
+            </div>
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Distance to River</span>
+              <span id="vulnDistanceRiver" class="font-data-metric text-data-metric font-bold text-error">220 m</span>
+            </div>
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Population Density</span>
+              <span id="vulnPopDensity" class="font-data-metric text-data-metric font-bold text-on-surface">3,800 / km²</span>
+            </div>
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Infrastructure Score</span>
+              <span id="vulnInfrastructureScore" class="font-data-metric text-data-metric font-bold text-on-surface">68 / 100</span>
+            </div>
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Nearest Hospital</span>
+              <span id="vulnHospital" class="font-data-metric text-data-metric font-bold text-on-surface">1.8 km</span>
+            </div>
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Evacuation Center</span>
+              <span id="vulnEvac" class="font-data-metric text-data-metric font-bold text-secondary">0.9 km</span>
+            </div>
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Built-Up Area</span>
+              <span id="vulnBuiltUp" class="font-data-metric text-data-metric font-bold text-on-surface">78.5%</span>
+            </div>
+            <div class="vulnerability-item">
+              <span class="font-label-md text-label-md text-outline">Drainage Index</span>
+              <span id="vulnDrainageIndex" class="font-data-metric text-data-metric font-bold text-on-surface">0.32</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 p-2 bg-surface-container rounded font-data-timestamp text-data-timestamp text-on-surface-variant">
+            <span class="material-symbols-outlined text-[15px] text-secondary">info</span>
+            <span>Static geospatial variables sourced from calibrated Sri Lanka district layer.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 4: Machine Learning Telemetry Card -->
+      <section class="card flex flex-col gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 pb-2 border-b border-surface-container">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-headline-sm text-headline-sm text-on-surface">Model Decision Threshold &amp; Feature Vector</span>
+              <span class="font-data-timestamp text-data-timestamp bg-primary-container text-on-primary px-2 py-0.5 rounded font-semibold">Production Node</span>
+            </div>
+            <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              Strict 64-feature vector evaluated by the Random Forest Classifier.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 font-data-timestamp text-data-timestamp">
+            <div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded">
+              <span class="text-outline">Architecture:</span>
+              <span class="font-semibold text-on-surface">Random Forest (500 Estimators)</span>
+            </div>
+            <div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded">
+              <span class="text-outline">Contract:</span>
+              <span class="font-semibold text-secondary">64 Features (Exact)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <!-- Probability Ratio Split -->
+          <div class="md:col-span-5 flex flex-col gap-3 bg-surface-container-low p-4 rounded-xl">
+            <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Binary Decision Threshold</span>
+            <div class="space-y-3">
+              <div>
+                <div class="flex justify-between font-label-md text-label-md mb-1">
+                  <span class="font-semibold text-error">Class 1: Flood Inundation</span>
+                  <span id="splitClass1Val" class="font-data-metric text-data-metric font-bold text-error">75.53%</span>
+                </div>
+                <div class="w-full bg-surface-container-highest h-3 rounded-full overflow-hidden">
+                  <div id="splitClass1Bar" class="bg-error h-full rounded-full transition-all" style="width: 75.53%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between font-label-md text-label-md mb-1">
+                  <span class="text-on-surface-variant">Class 0: Sub-Hazard / Normal</span>
+                  <span id="splitClass0Val" class="font-data-metric text-data-metric font-semibold text-on-surface-variant">24.47%</span>
+                </div>
+                <div class="w-full bg-surface-container-highest h-3 rounded-full overflow-hidden">
+                  <div id="splitClass0Bar" class="bg-secondary-container h-full rounded-full transition-all" style="width: 24.47%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Domain Categories -->
+          <div class="md:col-span-7 flex flex-col gap-2">
+            <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Core Feature Input Domains</span>
+            <div class="grid grid-cols-2 gap-2 font-body-sm text-body-sm">
+              <div class="p-2.5 bg-surface-container-low rounded">
+                <span class="font-semibold text-on-surface block">1. Antecedent Precipitation</span>
+                <span class="text-on-surface-variant text-xs">7-day, 30-day accumulation, rolling hourly rain</span>
+              </div>
+              <div class="p-2.5 bg-surface-container-low rounded">
+                <span class="font-semibold text-on-surface block">2. Geospatial Topography</span>
+                <span class="text-on-surface-variant text-xs">Elevation ASL, distance to river channels, slope</span>
+              </div>
+              <div class="p-2.5 bg-surface-container-low rounded">
+                <span class="font-semibold text-on-surface block">3. Surface Saturation</span>
+                <span class="text-on-surface-variant text-xs">Soil moisture, drainage capacity, vegetation index</span>
+              </div>
+              <div class="p-2.5 bg-surface-container-low rounded">
+                <span class="font-semibold text-on-surface block">4. Infrastructure &amp; Exposure</span>
+                <span class="text-on-surface-variant text-xs">Built-up impervious %, population density, hospital access</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 5: Prediction History Timeline Table -->
+      <section class="card flex flex-col gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Continuous Verification</span>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Station Inference History</h3>
+          </div>
+          <div class="flex items-center gap-2 font-data-timestamp text-data-timestamp text-on-surface-variant">
+            <span class="inline-block w-2 h-2 rounded-full bg-secondary"></span>
+            <span>Recorded Inferences</span>
+          </div>
+        </div>
+
+        <div class="w-full overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low font-label-md text-label-md text-outline uppercase tracking-wider">
+                <th class="py-2.5 px-4 rounded-l">Execution Time</th>
+                <th class="py-2.5 px-4">Flood Probability</th>
+                <th class="py-2.5 px-4">Classification Label</th>
+                <th class="py-2.5 px-4">Model Pipeline</th>
+                <th class="py-2.5 px-4 rounded-r">Data Source &amp; Quality</th>
+              </tr>
+            </thead>
+            <tbody id="districtHistoryTableBody" class="divide-y divide-surface-container font-body-sm text-body-sm">
+            </tbody>
+          </table>
+          <div id="districtHistoryEmpty" class="hidden p-6 text-center text-on-surface-variant font-body-sm">
+            No prediction history recorded for this station yet.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-meta">
+        <span class="footer-brand">Sri Lanka FloodWatch</span>
+        <span class="text-outline-variant">•</span>
+        <span>Location Deep-Dive</span>
+        <span class="text-outline-variant">•</span>
+        <span class="font-data-timestamp text-data-timestamp">64-Feature ML Telemetry</span>
+      </div>
+      <div class="footer-disclaimer">
+        <p>Scientific early warning telemetry combining Open-Meteo meteorological feeds with Random Forest classification.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/district.js"></script>
+</body>
+</html>

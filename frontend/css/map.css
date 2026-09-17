@@ -1,0 +1,260 @@
+/* Map Page Specific Styles — Google Stitch Precision Telemetry */
+
+.map-viewport {
+  position: relative;
+  width: 100%;
+  height: 740px;
+  background-color: #0b1622;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: block;
+}
+
+#leafletMap {
+  width: 100%;
+  height: 100%;
+  background-color: #0b1622;
+  z-index: 1;
+}
+
+.map-grid-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  pointer-events: none;
+  background-image: radial-gradient(#38bdf8 1px, transparent 1px);
+  background-size: 32px 32px;
+  z-index: 5;
+}
+
+/* Telemetry Leaflet Markers */
+.leaflet-station-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+}
+
+.marker-pin-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marker-outer-ring {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  opacity: 0.35;
+  transition: all 0.25s ease;
+}
+
+.marker-inner-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  z-index: 2;
+  transition: transform 0.2s ease;
+}
+
+.marker-pulse-ring {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  animation: markerPulse 2.2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes markerPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Selected marker highlight */
+.selected-marker .marker-inner-dot {
+  transform: scale(1.35);
+  border-color: #ffffff;
+  box-shadow: 0 0 14px #38bdf8, 0 0 0 3px rgba(56, 189, 248, 0.4);
+}
+
+.selected-marker .marker-outer-ring {
+  width: 44px;
+  height: 44px;
+  border: 2px dashed #ffffff;
+  opacity: 0.8;
+  animation: rotateRing 8s linear infinite;
+}
+
+@keyframes rotateRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Leaflet Custom Tooltip Dark Theme */
+.leaflet-tooltip-dark {
+  background: rgba(15, 23, 42, 0.94) !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+.leaflet-tooltip-dark::before {
+  border-top-color: rgba(15, 23, 42, 0.94) !important;
+}
+
+/* Leaflet Custom Popup Dark Theme */
+.leaflet-popup-dark .leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6) !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-dark .leaflet-popup-tip {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+
+.leaflet-popup-dark .leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Floating Controls Layered above Leaflet */
+.map-controls-top-left {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  padding: 0.25rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+}
+
+.map-ctrl-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--color-on-surface);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.map-ctrl-btn:hover {
+  background-color: var(--bg-surface-high);
+}
+
+.map-legend-bottom-left {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 20rem;
+  border: 1px solid var(--color-border);
+}
+
+.map-coord-bottom-right {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-on-surface-variant);
+  border: 1px solid var(--color-border);
+}
+
+/* Hide default leaflet zoom controls as we have Stitch controls */
+.leaflet-control-zoom {
+  display: none !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.75) !important;
+  color: #94a3b8 !important;
+  font-size: 10px !important;
+  border-radius: 4px !important;
+  margin: 4px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #38bdf8 !important;
+}
+
+/* Mini Marker for Dashboard Preview */
+.mini-marker .marker-inner-dot {
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+  border-width: 1.5px;
+}
+
+.mini-marker.selected-marker .marker-inner-dot {
+  transform: scale(1.4);
+  box-shadow: 0 0 10px #38bdf8, 0 0 0 2px rgba(56, 189, 248, 0.5);
+}
+
+/* Non-blocking Base Map Status Banner */
+.map-alert-banner {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background-color: rgba(30, 41, 59, 0.95);
+  color: #f1f5f9;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #475569;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}

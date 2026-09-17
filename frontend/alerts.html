@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Sri Lanka FloodWatch — Alerts &amp; Prediction History</title>
+  <meta name="description" content="Operational intelligence archive tracking continuous flood risk predictions and alerts across Sri Lanka."/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/alerts.css"/>
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('floodwatch_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-background font-body-md text-on-background min-h-screen flex flex-col antialiased">
+  
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <span class="material-symbols-outlined text-[20px]">water</span>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title-row">
+            <span class="brand-title">Sri Lanka FloodWatch</span>
+            <span class="brand-badge">AI/ML</span>
+          </div>
+          <span class="brand-subtitle">Live Early Flood Risk Prediction</span>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a class="nav-link" data-path="live-dashboard" href="index.html">Live Dashboard</a>
+        <a class="nav-link" data-path="flood-map" href="map.html">Flood Map</a>
+        <a class="nav-link" data-path="location-details" href="district.html">Location Details</a>
+        <a class="nav-link active" data-path="alerts-history" href="alerts.html" aria-current="page">Alerts &amp; History</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <div class="header-telemetry">
+          <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>LIVE DATA</span>
+          </div>
+          <span class="header-divider">|</span>
+          <div class="header-item">
+            <span class="material-symbols-outlined">schedule</span>
+            <span id="liveClock" class="header-live-time">11:21 PM</span>
+          </div>
+          <span class="header-divider">|</span>
+          <div class="header-item">
+            <span class="material-symbols-outlined">cloud_sync</span>
+            <span>Open-Meteo</span>
+          </div>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark / Light Mode" aria-label="Toggle theme mode" onclick="window.toggleTheme()">
+          <span class="material-symbols-outlined text-[18px]">dark_mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="flex flex-col gap-6">
+      
+      <!-- Header Section -->
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2 font-label-md text-label-md text-secondary uppercase tracking-wider font-semibold">
+            <span class="material-symbols-outlined text-[16px]">history_toggle_off</span>
+            <span>Operational Intelligence Archive</span>
+          </div>
+          <h1 class="font-display-lg text-display-lg text-on-background tracking-tight">Alerts &amp; Prediction History</h1>
+          <p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+            Monitor recent flood-risk changes and machine learning inference logs across monitored Sri Lankan stations.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-xl shadow-sm self-start lg:self-auto border border-surface-container">
+          <span class="material-symbols-outlined text-secondary text-[20px]">sync</span>
+          <div class="flex flex-col">
+            <span class="font-label-md text-label-md text-on-surface-variant leading-none">Automated Telemetry Cadence</span>
+            <span class="font-data-metric text-data-metric text-on-surface font-semibold">Live Real-Time Inference Stream</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric KPI Summary Cards (4 Dynamic Cards) -->
+      <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <!-- Card 1: High Risk -->
+        <div class="card flex flex-col justify-between relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-error font-semibold">Critical Threat Tier</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">High Risk Locations</span>
+            </div>
+            <span class="w-8 h-8 rounded-lg bg-error-container text-error flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[18px]">crisis_alert</span>
+            </span>
+          </div>
+          <div class="mt-4 flex items-baseline gap-2">
+            <span id="kpiHighCount" class="font-display-lg text-display-lg text-error font-bold leading-none">02</span>
+            <span class="font-label-lg text-label-lg text-on-surface-variant">Active Basins</span>
+          </div>
+          <div class="mt-3 pt-2 bg-surface-container-low p-2.5 rounded-lg flex flex-col gap-1">
+            <div class="flex items-center justify-between font-label-md text-label-md">
+              <span class="text-on-surface-variant font-medium">Critical Points</span>
+              <span class="text-error font-semibold">Active Inferences</span>
+            </div>
+            <div id="kpiHighList" class="flex flex-wrap gap-1 font-label-md text-label-md">
+              <span class="bg-surface-container px-1.5 py-0.5 rounded text-on-surface font-medium">Kolonnawa</span>
+              <span class="bg-surface-container px-1.5 py-0.5 rounded text-on-surface font-medium">Ratnapura</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Moderate Risk -->
+        <div class="card flex flex-col justify-between relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-secondary font-semibold">Elevated Sentry Tier</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Moderate Risk Locations</span>
+            </div>
+            <span class="w-8 h-8 rounded-lg bg-secondary-fixed text-secondary flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[18px]">warning</span>
+            </span>
+          </div>
+          <div class="mt-4 flex items-baseline gap-2">
+            <span id="kpiModCount" class="font-display-lg text-display-lg text-on-surface font-bold leading-none">06</span>
+            <span class="font-label-lg text-label-lg text-on-surface-variant">Stations Monitored</span>
+          </div>
+          <div class="mt-3 pt-2 bg-surface-container-low p-2.5 rounded-lg flex flex-col gap-1">
+            <div class="flex items-center justify-between font-label-md text-label-md">
+              <span class="text-on-surface-variant font-medium">Key Catchments</span>
+              <span class="text-secondary font-semibold">Rising Gradient</span>
+            </div>
+            <p id="kpiModList" class="font-body-sm text-body-sm text-on-surface-variant truncate">
+              Ja-Ela, Hanwella, Dunamale, Baddegama
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3: Low Risk -->
+        <div class="card flex flex-col justify-between relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-outline font-semibold">Stable Baseline Tier</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Low Risk Locations</span>
+            </div>
+            <span class="w-8 h-8 rounded-lg bg-surface-container text-on-surface-variant flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[18px]">verified</span>
+            </span>
+          </div>
+          <div class="mt-4 flex items-baseline gap-2">
+            <span id="kpiLowCount" class="font-display-lg text-display-lg text-on-surface font-bold leading-none">25</span>
+            <span class="font-label-lg text-label-lg text-on-surface-variant">Calm Catchments</span>
+          </div>
+          <div class="mt-3 pt-2 bg-surface-container-low p-2.5 rounded-lg flex flex-col gap-1">
+            <div class="flex items-center justify-between font-label-md text-label-md">
+              <span class="text-on-surface-variant font-medium">Standard Capacity</span>
+              <span class="text-on-surface-variant font-semibold">Capacity Safe</span>
+            </div>
+            <p id="kpiLowList" class="font-body-sm text-body-sm text-on-surface-variant truncate">
+              Kandy, Galle, Matara, Nuwara Eliya, Kurunegala
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 4: Latest Inference Cycle -->
+        <div class="card flex flex-col justify-between relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">Compute Telemetry</span>
+              <span class="font-headline-sm text-headline-sm text-on-surface">Live Telemetry Pipeline</span>
+            </div>
+            <span class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[18px]">memory</span>
+            </span>
+          </div>
+          <div class="mt-4 flex items-baseline gap-2">
+            <span class="font-data-display text-data-display text-on-surface font-bold leading-none">ONLINE</span>
+            <span class="font-label-md text-label-md text-secondary font-semibold">FastAPI Live</span>
+          </div>
+          <div class="mt-3 pt-2 bg-surface-container-low p-2.5 rounded-lg flex flex-col gap-1">
+            <div class="flex items-center justify-between font-data-timestamp text-data-timestamp">
+              <span class="text-on-surface-variant">Source: Open-Meteo V1</span>
+              <span class="text-secondary font-medium">Latency &lt;100ms</span>
+            </div>
+            <div class="flex items-center gap-1 font-label-md text-label-md text-on-surface-variant">
+              <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+              <span>64 Features Synthesized per Location</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filter & Search Toolbar -->
+      <section class="bg-surface-container-lowest p-3 rounded-xl shadow-sm border border-surface-container flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+          <!-- District Filter -->
+          <div class="relative">
+            <select id="filterDistrict" class="form-select">
+              <option value="">All Districts</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-2.5 text-outline text-[16px] pointer-events-none">expand_more</span>
+          </div>
+
+          <!-- Risk Level Filter -->
+          <div class="relative">
+            <select id="filterRisk" class="form-select">
+              <option value="">All Risk Levels</option>
+              <option value="high">High Risk Alert (&gt;65%)</option>
+              <option value="moderate">Moderate Elevation (35% - 65%)</option>
+              <option value="low">Low Risk (&lt;35%)</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-3 top-2.5 text-outline text-[16px] pointer-events-none">expand_more</span>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative">
+            <input id="searchAlerts" class="form-input" placeholder="Search station or district..." type="text"/>
+            <span class="material-symbols-outlined absolute right-3 top-2.5 text-outline text-[18px] pointer-events-none">search</span>
+          </div>
+        </div>
+
+        <!-- Export Button -->
+        <button id="btnExportAuditLog" class="btn btn-primary h-10 shrink-0">
+          <span class="material-symbols-outlined text-[18px]">download</span>
+          <span>Export Audit Log (CSV)</span>
+        </button>
+      </section>
+
+      <!-- Active Alert Feed -->
+      <section class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></div>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">Active Telemetry Alert Stream</h2>
+            <span id="alertCountBadge" class="bg-error-container text-error px-2 py-0.5 rounded font-data-metric text-data-metric font-semibold">Active Inferences</span>
+          </div>
+          <span class="font-data-timestamp text-data-timestamp text-on-surface-variant">Real-time inference triggers</span>
+        </div>
+
+        <div id="activeAlertStreamGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="col-span-2 p-6 bg-surface-container-lowest rounded-xl text-center text-on-surface-variant font-body-sm border border-surface-container">
+            Loading active telemetry alert stream...
+          </div>
+        </div>
+      </section>
+
+      <!-- Detailed History Log Table -->
+      <section class="card-flush card">
+        <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-surface-container-low/50 border-b border-surface-container">
+          <div class="flex flex-col">
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">Comprehensive Inference History</h2>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">Machine learning classification logs synchronized with real-time station telemetry.</span>
+          </div>
+          <div class="flex items-center gap-2 font-label-md text-label-md">
+            <span class="font-data-timestamp text-data-timestamp text-on-surface-variant">Pipeline Status:</span>
+            <span class="font-data-metric text-data-metric bg-surface-container px-2 py-1 rounded text-on-surface font-semibold">Active Stream</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left font-body-sm text-body-sm border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+                <th class="py-3 px-4">Timestamp</th>
+                <th class="py-3 px-4">Location &amp; Basin</th>
+                <th class="py-3 px-4">District</th>
+                <th class="py-3 px-4">7-Day Rain</th>
+                <th class="py-3 px-4">Flood Prob.</th>
+                <th class="py-3 px-4">Prediction Class</th>
+                <th class="py-3 px-4">Model &amp; Features</th>
+                <th class="py-3 px-4">Quality</th>
+                <th class="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-surface-container">
+            </tbody>
+          </table>
+          <div id="historyTableEmpty" class="hidden p-6 text-center text-on-surface-variant font-body-sm">
+            No matching prediction records found for the selected filter criteria.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-meta">
+        <span class="footer-brand">Sri Lanka FloodWatch</span>
+        <span class="text-outline-variant">•</span>
+        <span>Operational Intelligence Archive</span>
+        <span class="text-outline-variant">•</span>
+        <span class="font-data-timestamp text-data-timestamp">FastAPI &amp; Open-Meteo Synchronized</span>
+      </div>
+      <div class="footer-disclaimer">
+        <p>Inference audit log and real-time early warning stream for Sri Lankan hydrological catchment monitoring.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/alerts.js"></script>
+</body>
+</html>

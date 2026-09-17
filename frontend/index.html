@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Sri Lanka FloodWatch — Live Flood Risk Monitoring Dashboard</title>
+  <meta name="description" content="Operational dashboard for real-time flood risk inference and meteorological telemetry across Sri Lankan river basins."/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/dashboard.css"/>
+  <link rel="stylesheet" href="css/map.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('floodwatch_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'dark'); // Default to modern sleek dark theme
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body class="bg-background font-body-md text-on-background min-h-screen flex flex-col antialiased">
+  
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <span class="material-symbols-outlined text-[20px]">water</span>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title-row">
+            <span class="brand-title">Sri Lanka FloodWatch</span>
+            <span class="brand-badge">AI/ML</span>
+          </div>
+          <span class="brand-subtitle">Live Early Flood Risk Prediction</span>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a class="nav-link active" data-path="live-dashboard" href="index.html" aria-current="page">Live Dashboard</a>
+        <a class="nav-link" data-path="flood-map" href="map.html">Flood Map</a>
+        <a class="nav-link" data-path="location-details" href="district.html">Location Details</a>
+        <a class="nav-link" data-path="alerts-history" href="alerts.html">Alerts &amp; History</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <div class="header-telemetry">
+          <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>LIVE DATA</span>
+          </div>
+          <span class="header-divider">|</span>
+          <div class="header-item">
+            <span class="material-symbols-outlined">schedule</span>
+            <span id="liveClock" class="header-live-time">11:21 PM</span>
+          </div>
+          <span class="header-divider">|</span>
+          <div class="header-item">
+            <span class="material-symbols-outlined">cloud_sync</span>
+            <span>Open-Meteo</span>
+          </div>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark / Light Mode" aria-label="Toggle theme mode" onclick="window.toggleTheme()">
+          <span class="material-symbols-outlined text-[18px]">dark_mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="flex flex-col gap-6">
+      
+      <!-- Hero / Summary Header Area -->
+      <section class="dashboard-hero">
+        <div class="flex flex-col gap-3 max-w-2xl w-full">
+          <div class="flex items-center gap-2">
+            <span class="font-label-md text-label-md uppercase tracking-wider text-secondary bg-surface-container-low px-2 py-0.5 rounded font-semibold">Observatory Telemetry</span>
+            <span class="text-outline-variant font-data-timestamp">•</span>
+            <span id="heroStationId" class="font-data-timestamp text-data-timestamp text-on-surface-variant flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px] text-secondary">sensors</span>
+              Station ID: LK-LOC-001
+            </span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <h1 class="font-display-lg text-display-lg text-on-surface tracking-tight">Live Flood Risk Monitoring</h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+              Monitor current flood-risk conditions using live environmental telemetry and machine-learning predictions across key river basins.
+            </p>
+          </div>
+          
+          <!-- Location Selector & Map CTA -->
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <div class="relative min-w-[280px]">
+              <select id="locationSelect" aria-label="Select Basin Location" class="form-select">
+                <option value="1">Loading stations...</option>
+              </select>
+              <span class="material-symbols-outlined absolute right-2.5 top-2.5 pointer-events-none text-on-surface-variant text-[20px]">expand_more</span>
+            </div>
+            <button id="btnViewOnMap" class="btn btn-primary">
+              <span class="material-symbols-outlined text-[18px]">map</span>
+              <span>View on Map</span>
+            </button>
+            <div class="flex items-center gap-1.5 px-3 py-2 bg-surface-container-low rounded text-on-surface-variant font-data-timestamp text-data-timestamp">
+              <span class="w-2 h-2 rounded-full bg-secondary"></span>
+              <span id="heroStationSync">Baseline Telemetry Synchronized</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Circular Probability Visualization Focal Widget -->
+        <div class="gauge-container">
+          <div class="gauge-glow"></div>
+          
+          <!-- Concentric Gauges SVG -->
+          <svg class="gauge-svg" viewBox="0 0 200 115">
+            <!-- Background Outer Track -->
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#e2e8f0" stroke-linecap="round" stroke-width="14"></path>
+            <!-- Secondary Reference Track -->
+            <path d="M 32 100 A 68 68 0 0 1 168 100" fill="none" stroke="#eff4ff" stroke-linecap="round" stroke-width="4"></path>
+            <!-- Primary Probability Arc -->
+            <path id="gaugeProbabilityArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f97316" stroke-dasharray="251.32" stroke-dashoffset="61.49" stroke-linecap="round" stroke-width="14"></path>
+            <!-- Target Ticks -->
+            <line x1="100" y1="18" x2="100" y2="24" stroke="#64748b" stroke-width="1.5"></line>
+            <line x1="43" y1="43" x2="48" y2="48" stroke="#64748b" stroke-width="1.5"></line>
+            <line x1="157" y1="43" x2="152" y2="48" stroke="#64748b" stroke-width="1.5"></line>
+          </svg>
+
+          <!-- Metric Readout overlay in arc center -->
+          <div class="gauge-readout">
+            <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold">Flood Probability</span>
+            <div class="flex items-baseline gap-0.5">
+              <span id="gaugeProbNumber" class="font-data-display text-[34px] leading-tight text-on-surface font-bold tracking-tight">75.53</span>
+              <span class="font-data-metric text-data-metric text-on-surface-variant font-bold">%</span>
+            </div>
+            <div id="gaugeRiskBadge" class="mt-1 flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-error-container text-on-error-container">
+              <span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+              <span class="font-label-md text-label-md font-bold uppercase tracking-wider">High Risk</span>
+            </div>
+          </div>
+
+          <!-- Bottom Metric Bar -->
+          <div class="w-full flex items-center justify-between pt-3 mt-2 border-t border-surface-container font-data-timestamp text-data-timestamp text-on-surface-variant">
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px] text-secondary">verified</span>
+              <span>Model: <strong>Random Forest v1.0.0</strong></span>
+            </div>
+            <span id="gaugeDataQuality" class="bg-surface-container px-1.5 py-0.5 rounded font-semibold text-secondary">DATA: GOOD</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Weather Summary Cards Grid -->
+      <section class="weather-grid">
+        <!-- Card 1: Ambient Temp -->
+        <div class="weather-card">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">Ambient Temperature</span>
+              <span class="font-body-sm text-body-sm text-outline">Open-Meteo In-Situ</span>
+            </div>
+            <div class="weather-card-icon">
+              <span class="material-symbols-outlined text-[20px]">device_thermostat</span>
+            </div>
+          </div>
+          <div class="mt-3 flex flex-col">
+            <div class="flex items-baseline gap-1">
+              <span id="cardTemp" class="font-data-display text-data-display text-on-surface font-semibold">24.2</span>
+              <span class="font-data-metric text-data-metric text-on-surface-variant">°C</span>
+            </div>
+            <div class="mt-1 flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+              <span class="material-symbols-outlined text-[14px] text-secondary">sync</span>
+              <span>Updated from live telemetry</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Relative Humidity -->
+        <div class="weather-card">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">Relative Humidity</span>
+              <span class="font-body-sm text-body-sm text-outline">Atmospheric Saturation</span>
+            </div>
+            <div class="weather-card-icon">
+              <span class="material-symbols-outlined text-[20px]">humidity_percentage</span>
+            </div>
+          </div>
+          <div class="mt-3 flex flex-col">
+            <div class="flex items-baseline gap-1">
+              <span id="cardHumidity" class="font-data-display text-data-display text-on-surface font-semibold">96</span>
+              <span class="font-data-metric text-data-metric text-on-surface-variant">%</span>
+            </div>
+            <div class="mt-1 flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+              <span class="material-symbols-outlined text-[14px] text-secondary">cloud</span>
+              <span>Open-Meteo live feed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: 7-Day Rainfall -->
+        <div class="weather-card">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">7-Day Rainfall</span>
+              <span class="font-body-sm text-body-sm text-outline">Antecedent Accumulation</span>
+            </div>
+            <div class="weather-card-icon">
+              <span class="material-symbols-outlined text-[20px]">rainy</span>
+            </div>
+          </div>
+          <div class="mt-3 flex flex-col">
+            <div class="flex items-baseline gap-1">
+              <span id="cardRain7" class="font-data-display text-data-display text-on-surface font-semibold">18.6</span>
+              <span class="font-data-metric text-data-metric text-on-surface-variant">mm</span>
+            </div>
+            <div class="mt-1 flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+              <span class="material-symbols-outlined text-[14px] text-secondary">water_drop</span>
+              <span>Rolling 168h precipitation</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: 30-Day Rainfall -->
+        <div class="weather-card">
+          <div class="flex items-start justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-semibold">30-Day Rainfall</span>
+              <span class="font-body-sm text-body-sm text-outline">Catchment Soil Moisture Index</span>
+            </div>
+            <div class="weather-card-icon">
+              <span class="material-symbols-outlined text-[20px]">water_full</span>
+            </div>
+          </div>
+          <div class="mt-3 flex flex-col">
+            <div class="flex items-baseline gap-1">
+              <span id="cardRain30" class="font-data-display text-data-display text-on-surface font-semibold">84.2</span>
+              <span class="font-data-metric text-data-metric text-on-surface-variant">mm</span>
+            </div>
+            <div class="mt-1 flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+              <span class="material-symbols-outlined text-[14px] text-secondary">grass</span>
+              <span>Monthly cumulative baseline</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Location Status Card (Primary Target) -->
+      <section class="card flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 text-secondary">
+              <span class="material-symbols-outlined text-[28px]">crisis_alert</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-2">
+                <span id="statusPlaceName" class="font-headline-lg text-headline-lg text-on-surface font-bold">Kolonnawa</span>
+              </div>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span id="statusDistrict" class="font-body-sm text-body-sm text-outline font-medium">District: Colombo District</span>
+                <span class="text-outline-variant font-data-timestamp">•</span>
+                <span id="statusCoords" class="font-data-timestamp text-data-timestamp text-on-surface-variant">Lat 6.9271° N, Lon 79.8825° E</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk Badges & Primary Metrics -->
+          <div id="statusRiskBadgeContainer" class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-error-container text-on-error-container font-label-lg text-label-lg uppercase tracking-wider font-bold">
+              <span class="w-2.5 h-2.5 rounded-full bg-error animate-ping"></span>
+              <span>Risk: HIGH RISK</span>
+            </div>
+            <div class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg font-semibold">
+              Prediction: Class 1 (Flood Alert)
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Subgrid & Gauge Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          <!-- Probability Metric -->
+          <div class="bg-surface-container-low p-3 rounded-lg flex flex-col justify-between">
+            <div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md font-semibold uppercase">
+              <span>Flood Probability</span>
+              <span class="material-symbols-outlined text-[16px]">trending_up</span>
+            </div>
+            <div class="my-2 flex items-baseline gap-1">
+              <span id="statusProbValue" class="font-data-display text-[28px] text-error font-bold">75.53%</span>
+              <span class="font-data-metric text-data-metric text-on-surface-variant">Current Inference</span>
+            </div>
+            <!-- Gauge Bar Representation -->
+            <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden flex">
+              <div id="statusProbBar" class="bg-error h-full rounded-full transition-all duration-500" style="width: 75.53%;"></div>
+            </div>
+          </div>
+
+          <!-- River Discharge -->
+          <div class="bg-surface-container-low p-3 rounded-lg flex flex-col justify-between">
+            <div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md font-semibold uppercase">
+              <span>River Discharge</span>
+              <span class="material-symbols-outlined text-[16px]">waves</span>
+            </div>
+            <div class="my-2 flex items-baseline gap-1">
+              <span id="statusDischargeValue" class="font-data-display text-[28px] text-on-surface font-bold">12.4</span>
+              <span class="font-data-metric text-data-metric text-on-surface-variant">m³/s</span>
+            </div>
+            <div class="w-full flex items-center justify-between font-data-timestamp text-data-timestamp text-on-surface-variant">
+              <span id="statusDischargeMeta">Hydrological Telemetry</span>
+              <span class="text-secondary font-semibold">Live Metric</span>
+            </div>
+          </div>
+
+          <!-- ML Model Metadata -->
+          <div class="bg-surface-container-low p-3 rounded-lg flex flex-col justify-between font-data-timestamp text-data-timestamp">
+            <div class="flex items-center justify-between text-on-surface-variant font-label-md text-label-md font-semibold uppercase">
+              <span>ML Model Card</span>
+              <span class="material-symbols-outlined text-[16px] text-secondary">memory</span>
+            </div>
+            <div class="my-2 flex flex-col gap-1 text-on-surface">
+              <div class="flex justify-between">
+                <span class="text-outline">Algorithm:</span>
+                <span id="statusModelName" class="font-semibold">RandomForestClassifier</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-outline">Engine Version:</span>
+                <span id="statusModelVersion" class="font-semibold">v1.0.0 (Production)</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-outline">Active Features:</span>
+                <span id="statusModelFeatures" class="font-semibold">64 Hydro-Meteo Inputs</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-secondary">
+              <span id="statusModelIntegrity">Input Integrity: GOOD</span>
+              <span class="flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Active Engine
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons Row -->
+        <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-surface-container">
+          <button id="btnViewDetails" class="btn btn-secondary">
+            <span class="material-symbols-outlined text-[18px]">analytics</span>
+            <span>View Location Details</span>
+          </button>
+          <button id="btnOpenMap" class="btn btn-primary">
+            <span class="material-symbols-outlined text-[18px]">travel_explore</span>
+            <span>Open in Flood Map</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Dual Column Bottom Grid -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: Sri Lanka Interactive Vector Map Preview (7 cols) -->
+        <div class="lg:col-span-7 card flex flex-col justify-between gap-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+            <div>
+              <span class="font-label-md text-label-md uppercase tracking-wider text-secondary font-semibold">Catchment Geographic Status</span>
+              <h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Sri Lanka Basin Risk Vector</h2>
+            </div>
+            <a href="map.html" class="btn btn-secondary btn-sm self-start md:self-auto">
+              <span>Open Full Map</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </a>
+          </div>
+
+          <!-- Real GIS Geographic Sri Lanka Map Preview with Live Risk Nodes -->
+          <div class="dashboard-map-wrapper">
+            <div class="map-grid-overlay"></div>
+            
+            <!-- Real Leaflet Mini Map Viewport -->
+            <div id="dashboardMiniMap" class="w-full h-full relative z-0"></div>
+
+            <!-- Floating Legend -->
+            <div class="map-floating-legend">
+              <span class="font-semibold text-on-surface font-label-md text-label-md">Risk Category</span>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span><span class="text-on-surface-variant font-label-md text-label-md">Low</span></div>
+                <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span><span class="text-on-surface-variant font-label-md text-label-md">Mod</span></div>
+                <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#f97316]"></span><span class="text-on-surface-variant font-label-md text-label-md">High</span></div>
+                <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span><span class="text-on-surface-variant font-label-md text-label-md">Crit</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full flex items-center justify-between text-on-surface-variant font-data-timestamp text-data-timestamp">
+            <span>Coordinate Frame: EPSG:4326 (WGS 84 Sri Lanka)</span>
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">my_location</span>
+              <span>33 Monitored Locations Active</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Right Column: Recent Prediction Activity Feed (5 cols) -->
+        <div class="lg:col-span-5 card flex flex-col justify-between gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md uppercase tracking-wider text-secondary font-semibold">Sequential Telemetry</span>
+              <h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Recent Predictions</h2>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-surface-container-low font-data-timestamp text-data-timestamp text-on-surface-variant">
+              Live Stream
+            </span>
+          </div>
+
+          <!-- Activity Feed List -->
+          <div id="recentPredictionsFeed" class="flex flex-col gap-2 divide-y divide-surface-container">
+            <div class="p-4 text-center text-on-surface-variant font-body-sm">Loading recent inferences...</div>
+          </div>
+
+          <!-- Auto Refresh Indicator -->
+          <div class="mt-1 p-2.5 bg-surface-container-low rounded-lg flex flex-col gap-1.5">
+            <div class="flex items-center justify-between font-label-md text-label-md text-on-surface-variant font-semibold">
+              <span class="flex items-center gap-1">
+                <span id="refreshIcon" class="material-symbols-outlined text-[14px] text-secondary">update</span>
+                <span>Auto Pipeline Cycle: <strong id="pipelineCountdown" class="font-data-metric text-on-surface">05:00</strong></span>
+              </span>
+              <span>Open-Meteo Synced</span>
+            </div>
+            <div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+              <div class="bg-secondary h-full rounded-full animate-pulse" style="width: 80%;"></div>
+            </div>
+            <span class="font-data-timestamp text-[10px] leading-tight text-outline">
+              * Inferences reflect real-time meteorological conditions combined with 64 static &amp; antecedent hydrological features.
+            </span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-meta">
+        <span class="footer-brand">Sri Lanka FloodWatch</span>
+        <span class="text-outline-variant">•</span>
+        <span>Live data source: Open-Meteo</span>
+        <span class="text-outline-variant">•</span>
+        <span class="font-data-timestamp text-data-timestamp">ML model: Random Forest Classifier v1.0.0</span>
+        <span class="text-outline-variant">•</span>
+        <span class="font-data-timestamp text-data-timestamp">Status: Operational</span>
+      </div>
+      <div class="footer-disclaimer">
+        <p>Early flood-risk monitoring system built for YCS Competition. Predictions are model-based and should not replace official emergency directives.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+numpy
+pandas
+scikit-learn==1.6.1
+joblib
+httpx
+fastapi
+uvicorn
+pydantic
+supabase
+python-dotenv
