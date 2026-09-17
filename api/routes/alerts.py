@@ -53,6 +53,13 @@ def get_alerts(
     )
 
 
+from api.schemas.preferences import (
+    TriggeredAlertItem,
+    TriggeredAlertListResponse,
+    TriggeredAlertActionResponse,
+)
+
+
 @router.get(
     "/alerts/active",
     response_model=AlertListResponse,
@@ -70,6 +77,83 @@ def get_active_alerts(
         active_count=len(items),
         items=items
     )
+
+
+@router.get(
+    "/alerts/triggered",
+    response_model=TriggeredAlertListResponse,
+    summary="List triggered alerts from inferences crossing user thresholds"
+)
+def get_triggered_alerts(
+    device_id: Optional[str] = Query(None, description="Filter by device ID"),
+    location_id: Optional[int] = Query(None, description="Filter by location ID"),
+    status: Optional[str] = Query(None, description="Filter by status (UNREAD, READ, DISMISSED)"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: SupabaseService = Depends(get_db)
+):
+    alerts_raw = db.get_triggered_alerts(device_id=device_id, location_id=location_id, status=status, limit=limit, offset=offset)
+    all_unread = db.get_triggered_alerts(device_id=device_id, status="UNREAD", limit=200)
+
+    items = []
+    for a in alerts_raw:
+        prob = float(a.get("flood_probability", 0.0))
+        items.append(
+            TriggeredAlertItem(
+                id=a.get("id", 1),
+                preference_id=a.get("preference_id"),
+                device_id=a.get("device_id"),
+                location_id=a.get("location_id", 1),
+                location_name=a.get("location_name"),
+                district=a.get("district"),
+                prediction_id=a.get("prediction_id"),
+                flood_probability=prob,
+                flood_probability_percent=round(prob * 100, 2),
+                risk_level=a.get("risk_level", "LOW"),
+                threshold_crossed=float(a.get("threshold_crossed", 35.0)),
+                title=a.get("title", ""),
+                message=a.get("message", ""),
+                status=a.get("status", "UNREAD"),
+                created_at=str(a.get("created_at"))
+            )
+        )
+
+    return TriggeredAlertListResponse(
+        status="success",
+        total=len(items),
+        unread_count=len(all_unread),
+        items=items
+    )
+
+
+@router.post(
+    "/alerts/triggered/{alert_id:int}/read",
+    response_model=TriggeredAlertActionResponse,
+    summary="Mark triggered alert as read"
+)
+def mark_triggered_alert_read(
+    alert_id: int,
+    db: SupabaseService = Depends(get_db)
+):
+    updated = db.update_triggered_alert_status(alert_id, "READ")
+    if not updated:
+        raise HTTPException(status_code=404, detail={"status": "error", "message": f"Alert {alert_id} not found."})
+    return TriggeredAlertActionResponse(status="success", alert_id=alert_id, action="READ", message="Alert marked as read.")
+
+
+@router.post(
+    "/alerts/triggered/{alert_id:int}/dismiss",
+    response_model=TriggeredAlertActionResponse,
+    summary="Dismiss triggered alert"
+)
+def dismiss_triggered_alert(
+    alert_id: int,
+    db: SupabaseService = Depends(get_db)
+):
+    updated = db.update_triggered_alert_status(alert_id, "DISMISSED")
+    if not updated:
+        raise HTTPException(status_code=404, detail={"status": "error", "message": f"Alert {alert_id} not found."})
+    return TriggeredAlertActionResponse(status="success", alert_id=alert_id, action="DISMISSED", message="Alert dismissed.")
 
 
 @router.get(
