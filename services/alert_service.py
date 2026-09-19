@@ -30,6 +30,7 @@ from services.location_service import get_location_by_id, get_all_locations
 from services.supabase_service import get_supabase_service, SupabaseService
 from services.predictor import get_predictor, PredictorService
 from services.notification_service import get_notification_service, NotificationService
+from services.risk_engine import RiskEngine
 
 logger = logging.getLogger("AlertService")
 
@@ -51,7 +52,7 @@ class AlertService:
 
     def evaluate_prediction_for_alert(self, prediction_payload: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Evaluates an ML prediction against centralized operational policies.
+        Evaluates an ML prediction against centralized operational policies using RiskEngine.
         Does NOT recalculate ML probabilities; operates strictly on inference output.
         """
         pred = prediction_payload.get("prediction", {})
@@ -62,15 +63,9 @@ class AlertService:
         prob = float(pred.get("flood_probability", 0.0))
         pred_class = int(pred.get("class", 0))
 
-        # Determine operational risk level from continuous probability
-        if prob >= PROBABILITY_THRESHOLDS[RISK_LEVEL_CRITICAL]["min"]:
-            risk_level = RISK_LEVEL_CRITICAL
-        elif prob >= PROBABILITY_THRESHOLDS[RISK_LEVEL_HIGH]["min"]:
-            risk_level = RISK_LEVEL_HIGH
-        elif prob >= PROBABILITY_THRESHOLDS[RISK_LEVEL_MODERATE]["min"]:
-            risk_level = RISK_LEVEL_MODERATE
-        else:
-            risk_level = RISK_LEVEL_LOW
+        # Determine operational risk level via central RiskEngine
+        risk_level = RiskEngine.derive_risk_level(prob)
+        action_mapping = RiskEngine.get_canonical_action(risk_level)
 
         policy = ALERT_POLICY.get(risk_level, ALERT_POLICY[RISK_LEVEL_LOW])
         is_alertable = bool(policy.get("is_alertable", False))
@@ -103,10 +98,19 @@ class AlertService:
             title = f"Normal Hydrological Baseline — {place_name}"
             message = f"Hydrological sentry detects normal baseline conditions ({prob_pct}%) at {place_name} ({district})."
 
+        pred_id = prediction_payload.get("prediction_id") or prediction_payload.get("id") or pred.get("prediction_id")
+        valid_from = pred.get("valid_from") or prediction_payload.get("valid_from")
+        expires_at = pred.get("expires_at") or pred.get("valid_until") or prediction_payload.get("expires_at")
+
         recommendation = policy.get("default_recommendation", "Maintain routine monitoring.")
         data_source = f"{audit.get('weather_source', 'Open-Meteo')} / {model.get('name', 'RandomForest')} v{model.get('version', '1.0.0')}"
 
         return {
+            "prediction_id": pred_id,
+            "action_code": action_mapping.get("code"),
+            "action_message": action_mapping.get("message"),
+            "valid_from": valid_from,
+            "expires_at": expires_at,
             "risk_level": risk_level,
             "is_alertable": is_alertable,
             "auto_resolve": auto_resolve,
@@ -180,6 +184,11 @@ class AlertService:
                 alert_id = existing_alert["id"]
 
                 updates = {
+                    "prediction_id": evaluation.get("prediction_id"),
+                    "action_code": evaluation.get("action_code"),
+                    "action_message": evaluation.get("action_message"),
+                    "valid_from": evaluation.get("valid_from"),
+                    "expires_at": evaluation.get("expires_at"),
                     "flood_probability": prob,
                     "risk_level": risk_level,
                     "title": evaluation["title"],
@@ -211,6 +220,11 @@ class AlertService:
             else:
                 # Create NEW Active Alert
                 new_alert_data = {
+                    "prediction_id": evaluation.get("prediction_id"),
+                    "action_code": evaluation.get("action_code"),
+                    "action_message": evaluation.get("action_message"),
+                    "valid_from": evaluation.get("valid_from"),
+                    "expires_at": evaluation.get("expires_at"),
                     "location_id": numeric_loc_id,
                     "risk_level": risk_level,
                     "flood_probability": prob,
@@ -301,6 +315,54 @@ class AlertService:
         """
         raw_alerts = self.db.get_active_alerts(limit=limit)
         return [self._enrich_alert(a) for a in raw_alerts]
+
+    def get_active_alerts_for_location(self, location_id: Union[int, str]) -> List[Dict[str, Any]]:
+        """
+        Retrieves active/acknowledged alerts strictly belonging to location_id.
+        """
+        loc = self.db.get_location(location_id)
+        if not loc:
+            return []
+        loc_id = loc.get("id")
+        return self.get_alert_history(status=ALERT_STATUS_ACTIVE, location_id=loc_id, limit=20)
+
+    def get_current_alert_for_location(self, location_id: Union[int, str]) -> Dict[str, Any]:
+        """
+        Retrieves the canonical current active flood alert for a specific location ID.
+        Strictly enforces location isolation and prediction validity:
+        - Must match canonical location_id exactly.
+        - Must reference an active non-expired alert.
+        - Returns alert dict if active and valid, or None.
+        """
+        loc = self.db.get_location(location_id)
+        if not loc:
+            return {"status": "error", "code": "LOCATION_NOT_FOUND", "alert": None, "message": f"Location '{location_id}' not found."}
+        
+        numeric_loc_id = loc.get("id")
+        existing_alert = self.db.get_active_alert_for_location(numeric_loc_id)
+        if not existing_alert:
+            return {"status": "success", "alert": None, "message": f"No current active flood alert for {loc.get('place_name')}."}
+
+        # Check expiration
+        expires_at_str = existing_alert.get("expires_at")
+        if expires_at_str:
+            try:
+                dt_str = str(expires_at_str)
+                if dt_str.endswith("Z"):
+                    dt_str = dt_str[:-1] + "+00:00"
+                exp_dt = datetime.fromisoformat(dt_str)
+                now_dt = datetime.now(timezone(timedelta(hours=5, minutes=30)))
+                if exp_dt.tzinfo is None:
+                    exp_dt = exp_dt.replace(tzinfo=timezone(timedelta(hours=5, minutes=30)))
+                if exp_dt < now_dt:
+                    # Auto-expire alert
+                    self.db.update_alert(existing_alert["id"], {"status": "EXPIRED"})
+                    return {"status": "success", "alert": None, "message": f"Alert for {loc.get('place_name')} has expired."}
+            except Exception as e:
+                logger.warning(f"Error parsing alert expiration timestamp: {e}")
+
+        enriched = self._enrich_alert_with_location(existing_alert, loc)
+        return {"status": "success", "alert": enriched, "message": f"Active flood alert found for {loc.get('place_name')}."}
 
     def get_alert_history(
         self,

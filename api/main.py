@@ -27,8 +27,16 @@ from api.routes.predictions import router as predictions_router
 from api.routes.alerts import router as alerts_router
 from api.routes.cron import router as cron_router
 from api.routes.preferences import router as preferences_router
+from api.routes.warnings import router as warnings_router
+from api.routes.emergency import router as emergency_router
+from api.routes.notifications_v15 import router as notifications_v15_router
+from api.routes.admin import router as admin_router
+from api.routes.quality import router as quality_router
 from services.predictor import get_predictor
 from services.supabase_service import get_supabase_service
+
+
+
 
 
 # Logging Setup
@@ -51,9 +59,19 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+from api.middleware.security import (
+    CorrelationIdMiddleware,
+    SecurityHeadersMiddleware,
+    RateLimiterMiddleware
+)
+
 # CORS Configuration
 allowed_origins_env = os.getenv("FRONTEND_ORIGIN", "http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000,http://127.0.0.1:3000,https://sri-lanka-floodwatch.vercel.app")
 allowed_origins = [orig.strip() for orig in allowed_origins_env.split(",") if orig.strip()]
+
+app.add_middleware(RateLimiterMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CorrelationIdMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,26 +85,34 @@ app.add_middleware(
 # Global Exception Handler
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    req_id = getattr(request.state, "request_id", None)
     detail = exc.detail
     if isinstance(detail, dict):
-        return JSONResponse(status_code=exc.status_code, content=detail)
+        if req_id and "request_id" not in detail:
+            detail["request_id"] = req_id
+        return JSONResponse(status_code=exc.status_code, content=detail, headers={"X-Request-ID": req_id} if req_id else {})
     return JSONResponse(
         status_code=exc.status_code,
-        content={"status": "error", "code": f"HTTP_{exc.status_code}", "message": str(detail)}
+        content={"status": "error", "code": f"HTTP_{exc.status_code}", "message": str(detail), "request_id": req_id},
+        headers={"X-Request-ID": req_id} if req_id else {}
     )
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled server error on {request.url.path}: {exc}", exc_info=True)
+    req_id = getattr(request.state, "request_id", "REQ-UNKNOWN")
+    logger.error(f"[{req_id}] Unhandled server error on {request.url.path}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "status": "error",
             "code": "INTERNAL_SERVER_ERROR",
-            "message": "An unexpected server error occurred. Please try again later."
-        }
+            "message": "An unexpected server error occurred. Please try again later.",
+            "request_id": req_id
+        },
+        headers={"X-Request-ID": req_id}
     )
+
 
 
 # Lifecycle Events
@@ -124,12 +150,19 @@ app.include_router(weather_router, prefix="/api/v1")
 app.include_router(predictions_router, prefix="/api/v1")
 app.include_router(preferences_router, prefix="/api/v1")
 app.include_router(alerts_router, prefix="/api/v1")
+app.include_router(warnings_router, prefix="/api/v1")
+app.include_router(emergency_router, prefix="/api/v1")
+app.include_router(notifications_v15_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
+app.include_router(quality_router, prefix="/api/v1")
 app.include_router(cron_router, prefix="/api/v1")
+
+
 
 # Mount Static Frontend for Unified Direct Access
 frontend_dir = BASE_DIR / "frontend"
-if frontend_dir.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+target_static_dir = frontend_dir if (frontend_dir.exists() and (frontend_dir / "index.html").exists()) else BASE_DIR
+app.mount("/", StaticFiles(directory=str(target_static_dir), html=True), name="frontend")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from api.schemas.alert import (
     AlertItem,
     AlertResponse,
+    CurrentAlertResponse,
     AlertListResponse,
     AlertActionResponse,
     AlertProcessResponse,
@@ -173,6 +174,29 @@ def get_alert_by_id(
             detail={"status": "error", "code": "ALERT_NOT_FOUND", "message": f"Alert with ID {alert_id} not found."}
         )
     return AlertResponse(status="success", alert=alert)
+
+
+@router.get(
+    "/alerts/current/{location_id}",
+    response_model=CurrentAlertResponse,
+    responses={404: {"model": ErrorResponse, "description": "Location not found"}},
+    summary="Get current active alert for a location"
+)
+def get_current_alert_for_location(
+    location_id: str,
+    alert_service: AlertService = Depends(get_alert_service)
+):
+    res = alert_service.get_current_alert_for_location(location_id)
+    if res.get("status") == "error":
+        raise HTTPException(
+            status_code=404,
+            detail={"status": "error", "code": "LOCATION_NOT_FOUND", "message": res.get("message")}
+        )
+    return CurrentAlertResponse(
+        status="success",
+        alert=res.get("alert"),
+        message=res.get("message", "Current alert retrieved successfully.")
+    )
 
 
 @router.get(

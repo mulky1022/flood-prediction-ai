@@ -9,7 +9,9 @@
     { "source": "/dashboard", "destination": "/index.html" },
     { "source": "/district", "destination": "/district.html" },
     { "source": "/map", "destination": "/map.html" },
-    { "source": "/alerts", "destination": "/alerts.html" }
+    { "source": "/alerts", "destination": "/alerts.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/emergency", "destination": "/emergency.html" }
   ],
   "crons": [
     {

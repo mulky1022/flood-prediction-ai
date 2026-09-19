@@ -61,9 +61,29 @@ def get_all_locations() -> List[Dict[str, Any]]:
 
 def get_location_by_id(location_id: Union[int, str]) -> Optional[Dict[str, Any]]:
     """
-    Looks up a location by its integer 'id' or string 'record_id'.
+    Looks up a location by its integer 'id', string 'record_id', or alias string (e.g., RATNAPURA_001).
     """
     locations = load_locations()
+    s_id = str(location_id).strip().upper()
+
+    alias_map = {
+        "RATNAPURA_001": 7,
+        "KOLONNAWA_001": 1,
+        "HANWELLA_001": 2,
+        "GLENCORSE_001": 3,
+        "DERANIYAGALA_001": 4,
+        "KITULGALA_001": 5,
+        "HOLOMBUWA_001": 6,
+        "ELLAGAWA_001": 8,
+        "MAGURA_001": 9,
+        "BADDEGAMA_001": 10
+    }
+
+    if s_id in alias_map:
+        target_numeric = alias_map[s_id]
+        for loc in locations:
+            if loc.get("id") == target_numeric:
+                return loc
 
     for loc in locations:
         if isinstance(location_id, int) and loc.get("id") == location_id:

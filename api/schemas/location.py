@@ -2,7 +2,7 @@
 Location Pydantic Schemas.
 """
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -37,3 +37,15 @@ class LocationListResponse(BaseModel):
     status: str = Field(default="success")
     total: int = Field(..., example=33)
     locations: List[LocationSchema]
+
+
+class LocationDetailsResponse(BaseModel):
+    status: str = Field(default="success", example="success")
+    location: LocationSchema
+    current_prediction: Optional[Dict[str, Any]] = None
+    active_alerts: List[Dict[str, Any]] = Field(default_factory=list)
+    recent_history: List[Dict[str, Any]] = Field(default_factory=list)
+    official_warning: Optional[Dict[str, Any]] = None
+    status_flag: str = Field(default="CURRENT", example="CURRENT")  # CURRENT, STALE, NO_CURRENT_PREDICTION, ERROR
+
+

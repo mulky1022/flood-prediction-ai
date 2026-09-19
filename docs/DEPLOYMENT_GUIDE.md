@@ -81,7 +81,7 @@ Run the full Vercel routing simulation locally:
 
 ```bash
 # Ensure Vercel CLI is installed
-npm install -g vercel
+
 
 # Run local Vercel server (serves frontend & serverless Python API together)
 vercel dev
@@ -113,8 +113,7 @@ python scripts/test_supabase.py
 
 ### Step 6.1: Vercel Authentication
 ```bash
-vercel login
-```
+
 
 ### Step 6.2: Link Project
 ```bash

@@ -283,6 +283,35 @@ ON CONFLICT (id) DO UPDATE SET
   longitude = EXCLUDED.longitude,
   district = EXCLUDED.district;
 
+-- --------------------------------------------------------------------
+-- 8. Official Warnings Table (Phase 13 Official Government Warnings)
+-- --------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS official_warnings (
+    id SERIAL PRIMARY KEY,
+    warning_id VARCHAR(100) UNIQUE NOT NULL,
+    location_id INTEGER REFERENCES locations(id) ON DELETE CASCADE,
+    source_id VARCHAR(100) NOT NULL DEFAULT 'DMC-SL',
+    source_name VARCHAR(200) NOT NULL DEFAULT 'Disaster Management Centre (DMC) Sri Lanka',
+    source_type VARCHAR(100) NOT NULL DEFAULT 'GOVERNMENT_AGENCY',
+    source_url VARCHAR(500),
+    official_reference VARCHAR(100),
+    warning_type VARCHAR(100) NOT NULL DEFAULT 'FLOOD_WARNING',
+    severity VARCHAR(50) NOT NULL DEFAULT 'MAJOR',
+    title VARCHAR(300) NOT NULL,
+    message TEXT NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    valid_until TIMESTAMPTZ NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    language VARCHAR(10) DEFAULT 'en',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_official_warnings_location_id ON official_warnings(location_id);
+CREATE INDEX IF NOT EXISTS idx_official_warnings_status ON official_warnings(status);
+CREATE INDEX IF NOT EXISTS idx_official_warnings_warning_id ON official_warnings(warning_id);
+
 -- Sync all sequences (prevents duplicate-key errors after seeded INSERTs)
 SELECT setval('locations_id_seq',
     (SELECT COALESCE(MAX(id), 1) FROM locations), true);
@@ -296,6 +325,9 @@ SELECT setval('predictions_id_seq',
 SELECT setval('alerts_id_seq',
     (SELECT COALESCE(MAX(id), 1) FROM alerts), true);
 
+SELECT setval('official_warnings_id_seq',
+    (SELECT COALESCE(MAX(id), 1) FROM official_warnings), true);
+
 -- ====================================================================
 -- VERIFICATION QUERY  (run this after setup to confirm 33 stations)
 -- Expected: total_stations=33 | total_districts=25
@@ -306,3 +338,4 @@ SELECT
     SUM(CASE WHEN water_presence_flag = 'Likely'   THEN 1 ELSE 0 END)     AS high_risk_stations,
     SUM(CASE WHEN water_presence_flag = 'Unlikely' THEN 1 ELSE 0 END)     AS lower_risk_stations
 FROM locations;
+

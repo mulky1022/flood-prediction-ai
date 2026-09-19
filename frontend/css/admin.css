@@ -1,0 +1,62 @@
+/* ==========================================================================
+   Phase 17 — Admin / Technical Dashboard CSS Stylesheet
+   ========================================================================== */
+
+.admin-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  color: var(--color-on-surface-variant);
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-tab-btn:hover {
+  background-color: var(--bg-surface-low);
+  color: var(--color-on-surface);
+}
+
+.admin-tab-btn.active {
+  background-color: var(--bg-surface-high);
+  color: var(--color-secondary);
+  border-color: var(--color-border);
+}
+
+.admin-tab-btn:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* Badge variants */
+.badge-status-current {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-status-stale {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-status-missing {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive Table scrollable container */
+@media (max-width: 640px) {
+  .admin-tab-btn {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+}

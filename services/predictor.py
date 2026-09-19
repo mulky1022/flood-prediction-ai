@@ -16,6 +16,8 @@ import pandas as pd
 from services.location_service import get_location_by_id
 from weather.weather_processor import get_weather_for_location
 from services.feature_builder import build_feature_dataframe, FEATURE_COLUMNS
+from services.data_quality_service import get_data_quality_service, DATA_STATE_INVALID
+
 
 logger = logging.getLogger("PredictorService")
 
@@ -72,19 +74,18 @@ class PredictorService:
     def predict_from_features(self, X: pd.DataFrame) -> Dict[str, Any]:
         """
         Executes inference directly on a validated (1, 64) DataFrame.
+        Enforces feature order and model output validation via DataQualityService.
         """
-        if not isinstance(X, pd.DataFrame):
-            return {
-                "status": "error",
-                "ready_for_prediction": False,
-                "message": f"Expected pandas DataFrame, got {type(X)}"
-            }
+        quality_svc = get_data_quality_service()
 
-        if X.shape != (1, 64):
+        # Phase 20 Feature Validation Guardrail
+        feature_val = quality_svc.validate_feature_dataframe(X, self.feature_columns)
+        if not feature_val["valid"]:
             return {
                 "status": "error",
                 "ready_for_prediction": False,
-                "message": f"Feature shape mismatch. Expected (1, 64), got {X.shape}"
+                "message": feature_val["message"],
+                "quality_details": feature_val
             }
 
         try:
@@ -105,7 +106,7 @@ class PredictorService:
             else:
                 risk_level = "LOW"
 
-            return {
+            res = {
                 "status": "success",
                 "ready_for_prediction": True,
                 "prediction": {
@@ -121,6 +122,18 @@ class PredictorService:
                     "feature_count": 64
                 }
             }
+
+            # Phase 20 Model Output Validation
+            out_val = quality_svc.validate_model_output(res)
+            if not out_val["valid"]:
+                return {
+                    "status": "error",
+                    "ready_for_prediction": False,
+                    "message": f"Model output validation failed: {out_val.get('message')}"
+                }
+
+            return res
+
         except Exception as e:
             logger.error(f"Inference error: {e}", exc_info=True)
             return {
@@ -138,6 +151,8 @@ class PredictorService:
         """
         Coordinates end-to-end live inference for a location.
         """
+        quality_svc = get_data_quality_service()
+
         # 1. Resolve Location
         location = get_location_by_id(location_id)
         if not location:
@@ -146,6 +161,16 @@ class PredictorService:
                 "ready_for_prediction": False,
                 "location_id": location_id,
                 "message": f"Location ID '{location_id}' not found in locations database."
+            }
+
+        # Validate Location Isolation Invariant
+        mapping_val = quality_svc.validate_location_station_mapping(location_id, location.get("id"))
+        if not mapping_val["valid"]:
+            return {
+                "status": "prediction_unavailable",
+                "ready_for_prediction": False,
+                "reason": "location_mapping_mismatch",
+                "message": mapping_val["message"]
             }
 
         # 2. Fetch Weather
@@ -162,6 +187,9 @@ class PredictorService:
                 },
                 "message": weather_result.get("message", "Unable to retrieve weather data for prediction.")
             }
+
+        # Validate Weather Units & Ranges (flags suspicious data without discarding extreme floods)
+        weather_val = quality_svc.validate_weather_units_and_ranges(weather_result.get("current", {}))
 
         # 3. Build Feature Vector
         df_features, quality_report = build_feature_dataframe(
@@ -191,6 +219,14 @@ class PredictorService:
         if inference_result.get("status") != "success":
             return inference_result
 
+        # Track Station Health Telemetry
+        quality_svc.record_station_observation_telemetry(
+            station_id=location.get("id"),
+            location_id=location_id,
+            observation_success=True,
+            is_invalid=(weather_val.get("status") == DATA_STATE_INVALID)
+        )
+
         # 6. Assemble Full Response
         return {
             "status": "success",
@@ -207,7 +243,8 @@ class PredictorService:
                 "invalid_features": quality_report["invalid_features"],
                 "unknown_categories": quality_report["unknown_categories"],
                 "weather_quality": quality_report["weather_quality"],
-                "leakage_features_derived": quality_report["leakage_features_derived"]
+                "leakage_features_derived": quality_report["leakage_features_derived"],
+                "weather_validation": weather_val
             },
             "input_audit": {
                 "feature_count": 64,
@@ -217,6 +254,7 @@ class PredictorService:
                 "weather_retrieved_at": weather_result.get("source", {}).get("retrieved_at")
             }
         }
+
 
 
 # Global singleton instance

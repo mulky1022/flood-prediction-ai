@@ -2,7 +2,7 @@
 Alert Pydantic Schemas.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field
 
 
@@ -17,9 +17,14 @@ class AlertLocationInfo(BaseModel):
 
 class AlertItem(BaseModel):
     id: int = Field(..., example=1)
+    prediction_id: Optional[Union[int, str]] = Field(None, example="TEST-RAT-001")
     location_id: int = Field(..., example=7)
     location: Optional[AlertLocationInfo] = None
     risk_level: str = Field(..., example="HIGH")
+    action_code: Optional[str] = Field(None, example="PREPARE")
+    action_message: Optional[str] = Field(None, example="Prepare emergency supplies and monitor local water levels.")
+    valid_from: Optional[str] = Field(None, example="2026-09-18T12:00:00+05:30")
+    expires_at: Optional[str] = Field(None, example="2026-09-18T18:00:00+05:30")
     flood_probability: float = Field(..., ge=0.0, le=1.0, example=0.7650)
     flood_probability_percent: Optional[float] = Field(None, example=76.50)
     prediction_class: int = Field(..., example=1)
@@ -41,6 +46,12 @@ class AlertItem(BaseModel):
 class AlertResponse(BaseModel):
     status: str = Field(default="success", example="success")
     alert: AlertItem
+
+
+class CurrentAlertResponse(BaseModel):
+    status: str = Field(default="success", example="success")
+    alert: Optional[AlertItem] = None
+    message: str = Field(..., example="Active flood alert found.")
 
 
 class AlertListResponse(BaseModel):

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Flood+ — Admin & Technical Monitoring Dashboard</title>
+  <meta name="description" content="Technical administration and operational monitoring console for Sri Lanka Flood Prediction application."/>
+  <link rel="icon" type="image/png" href="assets/logo.png"/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/admin.css"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen flex flex-col antialiased">
+  
+  <!-- Accessibility Skip Link -->
+  <a href="#adminMain" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:bg-primary focus:text-white focus:p-3 focus:z-50 focus:rounded-lg">
+    Skip to main admin content
+  </a>
+
+  <!-- Admin Navigation Header -->
+  <header class="site-header border-b border-border bg-surface-low">
+    <div class="header-container flex items-center justify-between px-4 py-3 max-w-7xl mx-auto w-full">
+      <a class="brand-section flex items-center gap-3" href="index.html">
+        <img src="assets/logo.png" alt="FloodPulse Logo" class="w-8 h-8 rounded"/>
+        <div class="flex flex-col">
+          <span class="font-bold text-lg leading-none text-on-surface">Flood<span class="text-secondary">+</span> Admin</span>
+          <span class="text-xs text-on-surface-variant">Technical Operator &amp; System Health Console</span>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-3">
+        <span id="adminSessionStatus" class="text-xs font-semibold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>ADMIN AUTHENTICATED</span>
+        </span>
+        <a href="index.html" class="btn btn-secondary text-xs py-1.5 px-3">
+          <span class="material-symbols-outlined text-[16px]">public</span>
+          <span>Public App</span>
+        </a>
+        <button id="adminLogoutBtn" class="btn btn-secondary text-xs py-1.5 px-3 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border-rose-500/30" onclick="window.adminLogout && window.adminLogout()">
+          <span class="material-symbols-outlined text-[16px]">logout</span>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Modal Overlay (Shown when unauthenticated) -->
+  <div id="adminLoginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="card max-w-md w-full p-6 bg-surface border border-border shadow-2xl flex flex-col gap-4" role="dialog" aria-labelledby="loginTitle">
+      <div class="flex items-center gap-3 border-b border-border pb-3">
+        <span class="material-symbols-outlined text-secondary text-3xl">admin_panel_settings</span>
+        <div>
+          <h2 id="loginTitle" class="text-xl font-bold text-on-surface">Admin Access Verification</h2>
+          <p class="text-xs text-on-surface-variant">Enter secret operator authentication token to access monitoring console.</p>
+        </div>
+      </div>
+
+      <form id="adminLoginForm" onsubmit="window.handleAdminLogin(event)" class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label for="adminAuthTokenInput" class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Secret Admin Token</label>
+          <input type="password" id="adminAuthTokenInput" required placeholder="admin-secret-token-v17" class="form-select text-sm py-2 px-3 bg-surface-low border border-border rounded text-on-surface focus:outline-none focus:border-secondary"/>
+        </div>
+
+        <div id="adminLoginErrorMsg" class="hidden p-3 rounded bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
+          Invalid authentication token. Please try again.
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full py-2.5 font-bold text-sm">
+          <span class="material-symbols-outlined text-[18px]">key</span>
+          <span>Authenticate &amp; Launch Console</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Technical Dashboard -->
+  <main id="adminMain" class="main-content flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 flex flex-col gap-6">
+
+    <!-- ARIA Live Announcements Region -->
+    <div id="adminLiveAnnouncer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+    <!-- Technical Sub-Navigation Tabs -->
+    <nav class="flex items-center gap-2 border-b border-border overflow-x-auto pb-2" aria-label="Admin Navigation Tabs">
+      <button class="admin-tab-btn active" data-tab="overview" onclick="window.switchAdminTab('overview')">
+        <span class="material-symbols-outlined text-[18px]">dashboard</span>
+        <span>Overview</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="predictions" onclick="window.switchAdminTab('predictions')">
+        <span class="material-symbols-outlined text-[18px]">analytics</span>
+        <span>Predictions</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="jobs" onclick="window.switchAdminTab('jobs')">
+        <span class="material-symbols-outlined text-[18px]">published_with_changes</span>
+        <span>Jobs &amp; Retry</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="datasources" onclick="window.switchAdminTab('datasources')">
+        <span class="material-symbols-outlined text-[18px]">sensors</span>
+        <span>Data Sources</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="notifications" onclick="window.switchAdminTab('notifications')">
+        <span class="material-symbols-outlined text-[18px]">notifications</span>
+        <span>Notifications</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="errors" onclick="window.switchAdminTab('errors')">
+        <span class="material-symbols-outlined text-[18px]">error</span>
+        <span>Errors &amp; Audit</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="admin-tab-content flex flex-col gap-6">
+      
+      <!-- Component Health Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div class="card p-3.5 bg-surface-low border border-border flex flex-col gap-1">
+          <span class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">Overall Status</span>
+          <span id="healthOverall" class="text-base font-bold text-emerald-400">HEALTHY</span>
+        </div>
+        <div class="card p-3.5 bg-surface-low border border-border flex flex-col gap-1">
+          <span class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">Database</span>
+          <span id="healthDb" class="text-base font-bold text-emerald-400">CONNECTED</span>
+        </div>
+        <div class="card p-3.5 bg-surface-low border border-border flex flex-col gap-1">
+          <span class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">Telemetry API</span>
+          <span id="healthTelemetry" class="text-base font-bold text-emerald-400">ONLINE</span>
+        </div>
+        <div class="card p-3.5 bg-surface-low border border-border flex flex-col gap-1">
+          <span class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">ML Model Engine</span>
+          <span id="healthModel" class="text-base font-bold text-emerald-400">LOADED</span>
+        </div>
+        <div class="card p-3.5 bg-surface-low border border-border flex flex-col gap-1">
+          <span class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">Scheduler</span>
+          <span id="healthScheduler" class="text-base font-bold text-emerald-400">ACTIVE</span>
+        </div>
+        <div class="card p-3.5 bg-surface-low border border-border flex flex-col gap-1">
+          <span class="text-xs text-on-surface-variant font-semibold uppercase tracking-wider">Warning Sync</span>
+          <span id="healthWarnings" class="text-base font-bold text-emerald-400">SYNCED</span>
+        </div>
+      </div>
+
+      <!-- Overview Metrics Summary -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card p-5 bg-surface border border-border flex flex-col gap-2">
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Monitored Locations</span>
+          <div class="flex items-baseline gap-2">
+            <span id="metricLocCount" class="text-3xl font-extrabold text-on-surface">7</span>
+            <span class="text-xs text-emerald-400 font-semibold">100% Coverage</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">Ratnapura, Kolonnawa, Badulla, etc.</span>
+        </div>
+
+        <div class="card p-5 bg-surface border border-border flex flex-col gap-2">
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Active Predictions</span>
+          <div class="flex items-baseline gap-2">
+            <span id="metricPredCount" class="text-3xl font-extrabold text-on-surface">7</span>
+            <span class="text-xs text-secondary font-semibold">Canonical v1.2.0</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">Fresh predictions generated</span>
+        </div>
+
+        <div class="card p-5 bg-surface border border-border flex flex-col gap-2">
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Notifications (24h)</span>
+          <div class="flex items-baseline gap-2">
+            <span id="metricNotifCount" class="text-3xl font-extrabold text-on-surface">0</span>
+            <span class="text-xs text-sky-400 font-semibold">SMS &amp; WhatsApp</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">Privacy masked delivery</span>
+        </div>
+
+        <div class="card p-5 bg-surface border border-border flex flex-col gap-2">
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">System Errors (24h)</span>
+          <div class="flex items-baseline gap-2">
+            <span id="metricErrorCount" class="text-3xl font-extrabold text-on-surface">0</span>
+            <span class="text-xs text-emerald-400 font-semibold">Clean Operation</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">Zero unhandled failures</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: PREDICTIONS MONITORING -->
+    <section id="tab-predictions" class="admin-tab-content hidden flex flex-col gap-4">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <h2 class="text-lg font-bold text-on-surface">Canonical Prediction Monitoring Table</h2>
+        <div class="flex items-center gap-2">
+          <label for="adminLocFilter" class="sr-only">Filter by location</label>
+          <select id="adminLocFilter" class="form-select text-xs py-1.5 px-3 bg-surface border border-border rounded" onchange="window.loadAdminPredictions()">
+            <option value="">All Monitored Locations</option>
+            <option value="RATNAPURA_001">Ratnapura (RATNAPURA_001)</option>
+            <option value="KOLONNAWA_001">Kolonnawa (KOLONNAWA_001)</option>
+          </select>
+          <button class="btn btn-secondary text-xs py-1.5 px-3" onclick="window.loadAdminPredictions()">
+            <span class="material-symbols-outlined text-[16px]">refresh</span>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto border border-border rounded-xl bg-surface">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-surface-low border-b border-border text-xs uppercase font-bold text-on-surface-variant">
+              <th class="p-3">Prediction ID</th>
+              <th class="p-3">Location</th>
+              <th class="p-3">Risk Level</th>
+              <th class="p-3">Probability</th>
+              <th class="p-3">Freshness</th>
+              <th class="p-3">Model Version</th>
+              <th class="p-3">Valid Until</th>
+            </tr>
+          </thead>
+          <tbody id="adminPredictionsTbody">
+            <tr>
+              <td colspan="7" class="p-4 text-center text-on-surface-variant">Loading predictions...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: JOBS & CONTROLLED RETRY -->
+    <section id="tab-jobs" class="admin-tab-content hidden flex flex-col gap-4">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h2 class="text-lg font-bold text-on-surface">Prediction Pipeline Execution Jobs</h2>
+          <p class="text-xs text-on-surface-variant">Monitors canonical prediction generation cron jobs and permits controlled pipeline refresh triggers.</p>
+        </div>
+        <button id="btnAdminTriggerRetry" class="btn btn-primary text-xs py-2 px-4" onclick="window.triggerAdminRetry()">
+          <span class="material-symbols-outlined text-[16px]">published_with_changes</span>
+          <span>Trigger Canonical Pipeline Refresh</span>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto border border-border rounded-xl bg-surface">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-surface-low border-b border-border text-xs uppercase font-bold text-on-surface-variant">
+              <th class="p-3">Job ID</th>
+              <th class="p-3">Job Type</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Processed</th>
+              <th class="p-3">Model Version</th>
+              <th class="p-3">Started At</th>
+              <th class="p-3">Completed At</th>
+            </tr>
+          </thead>
+          <tbody id="adminJobsTbody">
+            <tr>
+              <td colspan="7" class="p-4 text-center text-on-surface-variant">Loading pipeline jobs...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: DATA SOURCES & STATIONS -->
+    <section id="tab-datasources" class="admin-tab-content hidden flex flex-col gap-6">
+      <div>
+        <h2 class="text-lg font-bold text-on-surface">Telemetry Feeds &amp; Station Mapping Inventory</h2>
+        <p class="text-xs text-on-surface-variant">Inspects live precipitation telemetry endpoints and station-to-location mapping integrity.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="adminDataSourcesCards">
+        <!-- Telemetry Data Source Items -->
+      </div>
+
+      <h3 class="text-base font-bold text-on-surface mt-2">Monitored Stations Inventory</h3>
+      <div class="overflow-x-auto border border-border rounded-xl bg-surface">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-surface-low border-b border-border text-xs uppercase font-bold text-on-surface-variant">
+              <th class="p-3">Station ID</th>
+              <th class="p-3">Station Name</th>
+              <th class="p-3">Mapped Location ID</th>
+              <th class="p-3">District</th>
+              <th class="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody id="adminStationsTbody">
+            <tr>
+              <td colspan="5" class="p-4 text-center text-on-surface-variant">Loading stations...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 5: NOTIFICATIONS LOG -->
+    <section id="tab-notifications" class="admin-tab-content hidden flex flex-col gap-4">
+      <div>
+        <h2 class="text-lg font-bold text-on-surface">Privacy-Masked Notification Delivery Log</h2>
+        <p class="text-xs text-on-surface-variant">Multi-channel SMS &amp; WhatsApp dispatches. Recipient numbers are strictly masked (+9477****567).</p>
+      </div>
+
+      <div class="overflow-x-auto border border-border rounded-xl bg-surface">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-surface-low border-b border-border text-xs uppercase font-bold text-on-surface-variant">
+              <th class="p-3">Notification ID</th>
+              <th class="p-3">Alert ID</th>
+              <th class="p-3">Channel</th>
+              <th class="p-3">Recipient Masked</th>
+              <th class="p-3">Language</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Dispatched At</th>
+            </tr>
+          </thead>
+          <tbody id="adminNotificationsTbody">
+            <tr>
+              <td colspan="7" class="p-4 text-center text-on-surface-variant">Loading notification logs...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 6: ERRORS & AUDIT TRAIL -->
+    <section id="tab-errors" class="admin-tab-content hidden flex flex-col gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- System Errors -->
+        <div class="flex flex-col gap-3">
+          <h2 class="text-lg font-bold text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-rose-400">warning</span>
+            <span>System Diagnostic Error Log</span>
+          </h2>
+          <div class="overflow-x-auto border border-border rounded-xl bg-surface p-3 min-h-[250px]">
+            <ul id="adminErrorsList" class="flex flex-col gap-2 text-xs">
+              <li class="text-on-surface-variant text-center py-4">No system errors recorded. Clean operation.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div class="flex flex-col gap-3">
+          <h2 class="text-lg font-bold text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary">history</span>
+            <span>Administrative Operation Audit Trail</span>
+          </h2>
+          <div class="overflow-x-auto border border-border rounded-xl bg-surface p-3 min-h-[250px]">
+            <ul id="adminAuditList" class="flex flex-col gap-2 text-xs">
+              <li class="text-on-surface-variant text-center py-4">Loading audit logs...</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -110,16 +110,40 @@ def build_feature_dataframe(
     # -------------------------------------------------------------
     # 1. Static Numerical Features
     # -------------------------------------------------------------
+    # Range bounds for static numerical fields
+    NUMERICAL_BOUNDS = {
+        "latitude": (-90.0, 90.0),
+        "longitude": (-180.0, 180.0),
+        "elevation_m": (-100.0, 9000.0),
+        "distance_to_river_m": (0.0, 100000.0),
+        "population_density_per_km2": (0.0, 100000.0),
+        "built_up_percent": (0.0, 100.0),
+        "drainage_index": (0.0, 10.0),
+        "historical_flood_count": (0.0, 1000.0)
+    }
+
     for field in STATIC_NUMERICAL_FIELDS:
         val = location.get(field)
         if val is None:
             missing_features.append(field)
             raw_features[field] = 0.0  # Placeholder for alignment; flagged in missing_features
         elif isinstance(val, (int, float)):
-            raw_features[field] = float(val)
+            fval = float(val)
+            bounds = NUMERICAL_BOUNDS.get(field)
+            if bounds and not (bounds[0] <= fval <= bounds[1]):
+                invalid_features.append(f"{field}: {val} out of range {bounds}")
+                raw_features[field] = 0.0
+            else:
+                raw_features[field] = fval
         else:
             try:
-                raw_features[field] = float(val)
+                fval = float(val)
+                bounds = NUMERICAL_BOUNDS.get(field)
+                if bounds and not (bounds[0] <= fval <= bounds[1]):
+                    invalid_features.append(f"{field}: {val} out of range {bounds}")
+                    raw_features[field] = 0.0
+                else:
+                    raw_features[field] = fval
             except (ValueError, TypeError):
                 invalid_features.append(f"{field}: {val}")
                 raw_features[field] = 0.0
