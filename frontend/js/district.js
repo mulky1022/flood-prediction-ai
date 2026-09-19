@@ -840,8 +840,18 @@ function updateLocationContextUI({ title, subtitle, icon, iconBg, distance }) {
  * Render Live Catchment Inundation Diagnostic Analysis Panel
  */
 export function renderLiveCatchmentAnalysis(predRes, loc, weather) {
-  const pred = predRes ? predRes.prediction : null;
-  const prob = pred ? (pred.flood_probability_percent !== undefined ? pred.flood_probability_percent : (pred.flood_probability * 100)) : 0;
+  const pred = predRes ? (predRes.prediction || predRes) : null;
+  const riskObj = pred ? (pred.risk || {}) : {};
+  let prob = 0;
+  if (riskObj.flood_probability_percent !== undefined) {
+    prob = Number(riskObj.flood_probability_percent);
+  } else if (pred && pred.flood_probability_percent !== undefined) {
+    prob = Number(pred.flood_probability_percent);
+  } else if (riskObj.score !== undefined) {
+    prob = Number(riskObj.score) * 100;
+  } else if (pred && pred.flood_probability !== undefined) {
+    prob = Number(pred.flood_probability) * 100;
+  }
   const rolling = (weather && weather.rainfall) ? weather.rainfall : (weather ? weather.rolling_aggregations : {});
   const rain7 = rolling ? (rolling.rainfall_7d_mm ?? rolling.precipitation_sum_7d_mm ?? 0) : 0;
   const elevation = loc ? (loc.elevation_m || 10) : 10;
@@ -1014,9 +1024,35 @@ function renderHeaderBanner(loc, activeAlerts = []) {
  * Radial Probability Gauge & Classification Result
  */
 function renderPredictionEngine(predRes, loc, activeAlerts = []) {
-  const pred = predRes ? predRes.prediction : null;
-  const probPercent = pred ? (pred.flood_probability_percent !== undefined ? pred.flood_probability_percent : (pred.flood_probability * 100)) : 0;
-  const risk = common.getRiskDetails(pred ? pred.risk_level : 'LOW', pred ? pred.flood_probability : 0);
+  if (!predRes) {
+    renderPredictionError('No current flood prediction is recorded for this location.');
+    return;
+  }
+
+  // Support both canonical prediction object format and legacy nested format
+  const pred = predRes.prediction || predRes;
+  const riskObj = pred.risk || {};
+
+  // Resolve probability percent & fractional score
+  let probPercent = 0;
+  let probScore = 0;
+  if (riskObj.flood_probability_percent !== undefined) {
+    probPercent = Number(riskObj.flood_probability_percent);
+    probScore = riskObj.score !== undefined ? Number(riskObj.score) : (probPercent / 100);
+  } else if (pred.flood_probability_percent !== undefined) {
+    probPercent = Number(pred.flood_probability_percent);
+    probScore = pred.flood_probability !== undefined ? Number(pred.flood_probability) : (probPercent / 100);
+  } else if (riskObj.score !== undefined) {
+    probScore = Number(riskObj.score);
+    probPercent = probScore * 100;
+  } else if (pred.flood_probability !== undefined) {
+    probScore = Number(pred.flood_probability);
+    probPercent = probScore * 100;
+  }
+
+  const riskLevel = riskObj.level || pred.risk_level || (probScore >= 0.65 ? 'HIGH' : probScore >= 0.35 ? 'MODERATE' : 'LOW');
+  const risk = common.getRiskDetails(riskLevel, probScore);
+  const predClass = pred.class !== undefined ? pred.class : (pred.prediction_class !== undefined ? pred.prediction_class : (probScore >= 0.5 ? 1 : 0));
 
   // Risk Badge
   const badgeEl = document.getElementById('detailRiskBadge');
@@ -1037,7 +1073,7 @@ function renderPredictionEngine(predRes, loc, activeAlerts = []) {
 
   if (circleEl) {
     const totalCircumference = 314.16;
-    const offset = totalCircumference - (totalCircumference * (Math.min(probPercent, 100) / 100));
+    const offset = totalCircumference - (totalCircumference * (Math.min(Math.max(probPercent, 0), 100) / 100));
     circleEl.style.strokeDasharray = `${totalCircumference}`;
     circleEl.style.strokeDashoffset = `${offset}`;
     circleEl.setAttribute('stroke', risk.dotColor);
@@ -1048,20 +1084,21 @@ function renderPredictionEngine(predRes, loc, activeAlerts = []) {
   const classDesc = document.getElementById('classificationDesc');
   const dataQuality = document.getElementById('classificationDataQuality');
 
-  if (classLabel && pred) {
+  if (classLabel) {
     classLabel.innerHTML = `
       <span class="material-symbols-outlined text-[18px]" style="color: ${risk.dotColor}">warning</span>
-      <span style="color: ${risk.dotColor}">Class ${pred.class} (${pred.class === 1 ? 'Flood Hazard Likely within 24-48h' : 'Sub-Hazard / Low Risk'})</span>
+      <span style="color: ${risk.dotColor}">Class ${predClass} (${predClass === 1 ? 'Flood Hazard Likely within 24-48h' : 'Sub-Hazard / Low Risk'})</span>
     `;
   }
 
-  if (classDesc && pred) {
+  if (classDesc) {
     const alertRec = (activeAlerts && activeAlerts.length > 0) ? activeAlerts[0].recommendation : null;
-    classDesc.textContent = alertRec || pred.recommendation || 
+    const actionMsg = pred.action ? (pred.action.message || (typeof pred.action === 'string' ? pred.action : null)) : null;
+    classDesc.textContent = alertRec || actionMsg || pred.recommendation || 
       `Inference engine evaluates 64 hydro-meteorological features including antecedent rainfall accumulation, elevation (${loc?.elevation_m || 'N/A'}m ASL), and distance to river channels (${loc?.distance_to_river_m || 'N/A'}m).`;
   }
 
-  if (dataQuality && pred) {
+  if (dataQuality) {
     const qualityStatus = predRes?.data_quality?.status || pred?.data_quality_status || 'GOOD';
     const featuresCount = predRes?.data_quality?.features_present_count || pred?.features_used_count || 64;
     dataQuality.textContent = `${qualityStatus} (${featuresCount}/64 Features)`;
@@ -1145,8 +1182,19 @@ function renderVulnerabilityMatrix(loc) {
  * Binary Decision Threshold
  */
 function renderDecisionThreshold(predRes) {
-  const pred = predRes ? predRes.prediction : null;
-  const prob1 = pred ? (pred.flood_probability_percent !== undefined ? pred.flood_probability_percent : (pred.flood_probability * 100)) : 0;
+  if (!predRes) return;
+  const pred = predRes.prediction || predRes;
+  const riskObj = pred.risk || {};
+  let prob1 = 0;
+  if (riskObj.flood_probability_percent !== undefined) {
+    prob1 = Number(riskObj.flood_probability_percent);
+  } else if (pred.flood_probability_percent !== undefined) {
+    prob1 = Number(pred.flood_probability_percent);
+  } else if (riskObj.score !== undefined) {
+    prob1 = Number(riskObj.score) * 100;
+  } else if (pred.flood_probability !== undefined) {
+    prob1 = Number(pred.flood_probability) * 100;
+  }
   const prob0 = 100 - prob1;
 
   const class1Val = document.getElementById('splitClass1Val');
@@ -1156,8 +1204,8 @@ function renderDecisionThreshold(predRes) {
 
   if (class1Val) class1Val.textContent = `${common.formatNumber(prob1, 2)}%`;
   if (class0Val) class0Val.textContent = `${common.formatNumber(prob0, 2)}%`;
-  if (class1Bar) class1Bar.style.width = `${Math.min(prob1, 100)}%`;
-  if (class0Bar) class0Bar.style.width = `${Math.min(prob0, 100)}%`;
+  if (class1Bar) class1Bar.style.width = `${Math.min(Math.max(prob1, 0), 100)}%`;
+  if (class0Bar) class0Bar.style.width = `${Math.min(Math.max(prob0, 0), 100)}%`;
 }
 
 /**
