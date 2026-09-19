@@ -42,6 +42,38 @@ def extract_current_weather(raw_forecast: Dict[str, Any]) -> Dict[str, Any]:
     ).to_dict()
 
 
+def calculate_rainfall_24h(
+    hourly_times: List[str],
+    hourly_precipitation: List[Any],
+    past_hours: int = 168,
+    forecast_hours: int = 24
+) -> Dict[str, float]:
+    """
+    Calculates past 24-hour cumulative rainfall and next 24-hour forecast rainfall.
+    """
+    if not hourly_precipitation:
+        return {"rainfall_24h_mm": 0.0, "rainfall_24h_forecast_mm": 0.0}
+
+    total = len(hourly_precipitation)
+    if total >= past_hours + forecast_hours:
+        past_24_slice = hourly_precipitation[past_hours - 24:past_hours]
+        forecast_24_slice = hourly_precipitation[past_hours:past_hours + forecast_hours]
+    elif total >= 24:
+        past_24_slice = hourly_precipitation[-24:]
+        forecast_24_slice = hourly_precipitation[-24:]
+    else:
+        past_24_slice = hourly_precipitation
+        forecast_24_slice = hourly_precipitation
+
+    past_24_sum = sum(float(v) for v in past_24_slice if isinstance(v, (int, float)) and v >= 0)
+    forecast_24_sum = sum(float(v) for v in forecast_24_slice if isinstance(v, (int, float)) and v >= 0)
+
+    return {
+        "rainfall_24h_mm": round(past_24_sum, 2),
+        "rainfall_24h_forecast_mm": round(forecast_24_sum, 2)
+    }
+
+
 def calculate_rainfall_7d(
     hourly_times: List[str],
     hourly_precipitation: List[Any],
@@ -242,7 +274,8 @@ def get_weather_for_location(location_id: Union[int, str], use_cache: bool = Tru
     hourly_times = hourly_block.get("time", [])
     hourly_precip = hourly_block.get("precipitation", [])
 
-    # 3. Calculate 7-Day Rainfall
+    # 3. Calculate 24-Hour & 7-Day Rainfall Metrics
+    rainfall_24h_result = calculate_rainfall_24h(hourly_times, hourly_precip, past_hours=168, forecast_hours=24)
     rainfall_7d_result = calculate_rainfall_7d(hourly_times, hourly_precip, expected_hours=168)
 
     # 4. Fetch Rolling 30-Day Archive Data for Monthly Calculation
@@ -270,6 +303,8 @@ def get_weather_for_location(location_id: Union[int, str], use_cache: bool = Tru
 
     # 5. Extract Current Weather
     current_weather = extract_current_weather(raw_forecast)
+    current_weather["rainfall_24h_mm"] = rainfall_24h_result["rainfall_24h_mm"]
+    current_weather["rainfall_24h_forecast_mm"] = rainfall_24h_result["rainfall_24h_forecast_mm"]
 
     # 6. Assemble Structured Response
     return {
@@ -283,6 +318,8 @@ def get_weather_for_location(location_id: Union[int, str], use_cache: bool = Tru
         },
         "current": current_weather,
         "rainfall": {
+            "rainfall_24h_mm": rainfall_24h_result["rainfall_24h_mm"],
+            "rainfall_24h_forecast_mm": rainfall_24h_result["rainfall_24h_forecast_mm"],
             "rainfall_7d_mm": rainfall_7d_result["rainfall_7d_mm"],
             "monthly_rainfall_mm": monthly_result["monthly_rainfall_mm"],
             "rainfall_7d_definition": rainfall_7d_result["definition"],

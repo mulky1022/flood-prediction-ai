@@ -676,6 +676,7 @@ function renderSidebarData(predRes, weatherRes, isStale) {
   const action = predRes.action || { code: 'SAFE', message: 'Normal conditions. No immediate flood risk detected.' };
   const cond = predRes.conditions || {};
   const currentWx = (weatherRes && weatherRes.current) ? weatherRes.current : {};
+  const rainfallWx = (weatherRes && weatherRes.rainfall) ? weatherRes.rainfall : {};
 
   const probPct = risk.flood_probability_percent !== undefined ? risk.flood_probability_percent : (risk.score ? risk.score * 100 : 0.0);
   const riskDetails = common.getRiskDetails(risk.level, probPct / 100);
@@ -750,12 +751,19 @@ function renderSidebarData(predRes, weatherRes, isStale) {
   const rain7El = document.getElementById('panelRain7');
   const dischargeEl = document.getElementById('panelDischarge');
 
-  const rain24Val = cond.rainfall_mm_24h !== undefined ? cond.rainfall_mm_24h : (currentWx.precipitation_mm || 0.0);
-  const flowVal = cond.water_level_m !== undefined ? cond.water_level_m : currentWx.river_discharge_m3s;
+  const rain24Val = (rainfallWx.rainfall_24h_forecast_mm !== undefined && rainfallWx.rainfall_24h_forecast_mm !== null)
+    ? rainfallWx.rainfall_24h_forecast_mm
+    : (rainfallWx.rainfall_24h_mm !== undefined ? rainfallWx.rainfall_24h_mm : (cond.rainfall_mm_24h !== undefined && cond.rainfall_mm_24h > 0 ? cond.rainfall_mm_24h : (currentWx.precipitation_mm || 0.0)));
+  const rain7Val = (rainfallWx.rainfall_7d_mm !== undefined && rainfallWx.rainfall_7d_mm !== null)
+    ? rainfallWx.rainfall_7d_mm
+    : (rain24Val * 7);
+  const flowVal = (cond.water_level_m !== undefined && cond.water_level_m > 0)
+    ? `${common.formatNumber(cond.water_level_m, 1)} m`
+    : (currentWx.river_discharge_m3s !== undefined ? `${common.formatNumber(currentWx.river_discharge_m3s, 1)} m³/s` : 'Baseline');
 
   if (rain24El) rain24El.textContent = `${common.formatNumber(rain24Val, 1, '0.0')} mm`;
-  if (rain7El) rain7El.textContent = `${common.formatNumber(currentWx.precipitation_sum_7d_mm || (rain24Val * 3), 1, '0.0')} mm`;
-  if (dischargeEl) dischargeEl.textContent = flowVal !== undefined && flowVal !== null ? `${common.formatNumber(flowVal, 1)} m³/s` : 'Baseline';
+  if (rain7El) rain7El.textContent = `${common.formatNumber(rain7Val, 1, '0.0')} mm`;
+  if (dischargeEl) dischargeEl.textContent = flowVal;
 }
 
 /**

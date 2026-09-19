@@ -348,6 +348,7 @@ function renderDashboardView(predRes, locationRes, weatherRes, officialWarningRe
   const action = predRes.action || { code: 'SAFE', message: 'Normal conditions. No immediate flood risk detected.' };
   const cond = predRes.conditions || {};
   const currentWx = (weatherRes && weatherRes.current) ? weatherRes.current : {};
+  const rainfallWx = (weatherRes && weatherRes.rainfall) ? weatherRes.rainfall : {};
 
   const i18n = common.i18n;
 
@@ -490,31 +491,85 @@ function renderDashboardView(predRes, locationRes, weatherRes, officialWarningRe
   // 5. Official Government Warning Card (Phase 13)
   renderOfficialWarningCard(officialWarningRes);
 
-  // 6. Conditions Grid
+  // 6. Conditions Grid (Live Open-Meteo Telemetry & In-situ Sensing)
   const condRainfallEl = document.getElementById('condRainfall');
   const condWaterLevelEl = document.getElementById('condWaterLevel');
+  const condWaterLevelMetaEl = document.getElementById('condWaterLevelMeta');
   const condTrendEl = document.getElementById('condTrend');
   const cardTempEl = document.getElementById('cardTemp');
   const cardHumidityEl = document.getElementById('cardHumidity');
 
-  const rainfallVal = cond.rainfall_mm_24h !== undefined 
-    ? cond.rainfall_mm_24h 
-    : (currentWx.precipitation_mm || 0.0);
+  // Real-time 24h precipitation from Open-Meteo takes priority
+  let rainfallVal = 0.0;
+  if (rainfallWx.rainfall_24h_forecast_mm !== undefined && rainfallWx.rainfall_24h_forecast_mm !== null) {
+    rainfallVal = rainfallWx.rainfall_24h_forecast_mm;
+  } else if (rainfallWx.rainfall_24h_mm !== undefined && rainfallWx.rainfall_24h_mm !== null) {
+    rainfallVal = rainfallWx.rainfall_24h_mm;
+  } else if (currentWx.precipitation_mm !== undefined && currentWx.precipitation_mm !== null && currentWx.precipitation_mm > 0) {
+    rainfallVal = currentWx.precipitation_mm;
+  } else if (cond.rainfall_mm_24h !== undefined && cond.rainfall_mm_24h > 0) {
+    rainfallVal = cond.rainfall_mm_24h;
+  } else if (currentWx.precipitation_mm !== undefined && currentWx.precipitation_mm !== null) {
+    rainfallVal = currentWx.precipitation_mm;
+  } else if (rainfallWx.rainfall_7d_mm) {
+    rainfallVal = rainfallWx.rainfall_7d_mm / 7.0;
+  } else if (cond.rainfall_mm_24h !== undefined) {
+    rainfallVal = cond.rainfall_mm_24h;
+  }
   if (condRainfallEl) condRainfallEl.textContent = common.formatNumber(rainfallVal, 1, '0.0');
 
-  const waterLevelVal = cond.water_level_m !== undefined 
-    ? cond.water_level_m 
-    : (cond.river_discharge_m3s !== undefined ? cond.river_discharge_m3s : currentWx.river_discharge_m3s);
-  if (condWaterLevelEl) condWaterLevelEl.textContent = common.formatNumber(waterLevelVal, 1, 'N/A');
-
-  const trendVal = cond.water_level_trend || 'Steady';
-  if (condTrendEl) condTrendEl.textContent = trendVal;
-
-  const tempVal = cond.temperature_c !== undefined ? cond.temperature_c : currentWx.temperature_c;
+  // Ambient Weather (Temp & Humidity) from live Open-Meteo observation
+  const tempVal = (currentWx.temperature_c !== undefined && currentWx.temperature_c !== null)
+    ? currentWx.temperature_c
+    : cond.temperature_c;
   if (cardTempEl) cardTempEl.textContent = common.formatNumber(tempVal, 1, '--');
 
-  const humVal = cond.humidity_percent !== undefined ? cond.humidity_percent : currentWx.humidity_percent;
+  const humVal = (currentWx.humidity_percent !== undefined && currentWx.humidity_percent !== null)
+    ? currentWx.humidity_percent
+    : cond.humidity_percent;
   if (cardHumidityEl) cardHumidityEl.textContent = common.formatNumber(humVal, 0, '--');
+
+  // Water Trend based on real rainfall dynamics & stream conditions
+  let trendVal = cond.water_level_trend;
+  const r7 = rainfallWx.rainfall_7d_mm || 0;
+  if (!trendVal || trendVal === 'Steady') {
+    if (r7 > 100 || rainfallVal > 20) {
+      trendVal = 'Rising';
+    } else if (r7 < 20 && rainfallVal < 2) {
+      trendVal = 'Falling';
+    } else {
+      trendVal = 'Steady';
+    }
+  }
+  if (condTrendEl) {
+    condTrendEl.textContent = trendVal;
+    if (trendVal === 'Rising') {
+      condTrendEl.className = 'font-data-display text-2xl text-rose-400 font-bold';
+    } else if (trendVal === 'Falling') {
+      condTrendEl.className = 'font-data-display text-2xl text-emerald-400 font-bold';
+    } else {
+      condTrendEl.className = 'font-data-display text-2xl text-on-surface font-bold';
+    }
+  }
+
+  // Water Level / River Proximity / Discharge
+  if (cond.water_level_m !== undefined && cond.water_level_m > 0) {
+    if (condWaterLevelEl) condWaterLevelEl.textContent = common.formatNumber(cond.water_level_m, 1, 'N/A');
+  } else if (currentWx.river_discharge_m3s !== undefined && currentWx.river_discharge_m3s !== null) {
+    if (condWaterLevelEl) condWaterLevelEl.textContent = common.formatNumber(currentWx.river_discharge_m3s, 1, 'N/A');
+  } else if (cond.river_discharge_m3s !== undefined && cond.river_discharge_m3s !== null) {
+    if (condWaterLevelEl) condWaterLevelEl.textContent = common.formatNumber(cond.river_discharge_m3s, 1, 'N/A');
+  } else {
+    const distM = (locationRes && locationRes.distance_to_river_m) || (loc && loc.distance_to_river_m);
+    if (distM !== undefined && distM !== null) {
+      if (condWaterLevelEl) condWaterLevelEl.textContent = common.formatNumber(distM, 0, 'N/A');
+      const unitEl = condWaterLevelEl?.nextElementSibling;
+      if (unitEl) unitEl.textContent = 'm';
+      if (condWaterLevelMetaEl) condWaterLevelMetaEl.textContent = 'Distance to river channel';
+    } else {
+      if (condWaterLevelEl) condWaterLevelEl.textContent = 'Normal';
+    }
+  }
 
   // 7. Secondary Technical Details (Collapsible)
   const statusModelNameEl = document.getElementById('statusModelName');

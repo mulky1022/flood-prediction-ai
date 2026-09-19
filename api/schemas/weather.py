@@ -14,9 +14,13 @@ class CurrentWeatherSchema(BaseModel):
     weather_code: Optional[int] = Field(None, example=3)
     wind_speed_kmh: Optional[float] = Field(None, example=5.3)
     observed_at: Optional[str] = Field(None, example="2026-09-16T22:45")
+    rainfall_24h_mm: Optional[float] = Field(None, example=12.4)
+    rainfall_24h_forecast_mm: Optional[float] = Field(None, example=8.2)
 
 
 class RainfallSchema(BaseModel):
+    rainfall_24h_mm: Optional[float] = Field(default=0.0, example=12.4)
+    rainfall_24h_forecast_mm: Optional[float] = Field(default=0.0, example=8.2)
     rainfall_7d_mm: float = Field(..., example=114.5)
     monthly_rainfall_mm: float = Field(..., example=248.4)
     rainfall_7d_definition: str = Field(..., example="rolling_168_hourly_precipitation_sum")

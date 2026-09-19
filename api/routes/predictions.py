@@ -2,7 +2,7 @@
 Predictions API Routes — Unified Prediction API Layer.
 """
 
-from typing import Optional, List
+from typing import Optional, List, Any, Dict, Union
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from api.schemas.prediction import (
@@ -64,6 +64,46 @@ def _build_action_block(risk_level: str) -> CanonicalActionBlock:
     """
     action_info = RiskEngine.get_canonical_action(risk_level)
     return CanonicalActionBlock(code=action_info["code"], message=action_info["message"])
+
+
+def _build_conditions_block(location_id: Any, db_record: Optional[dict] = None) -> dict:
+    """
+    Assembles real-time environmental conditions from live weather and location telemetry.
+    """
+    try:
+        from weather.weather_processor import get_weather_for_location
+        wx = get_weather_for_location(location_id, use_cache=True)
+        if wx.get("status") == "success":
+            curr_wx = wx.get("current", {})
+            rain_wx = wx.get("rainfall", {})
+            temp_c = curr_wx.get("temperature_c") if curr_wx.get("temperature_c") is not None else 26.5
+            hum_pct = curr_wx.get("humidity_percent") if curr_wx.get("humidity_percent") is not None else 85.0
+            rain_24h = rain_wx.get("rainfall_24h_forecast_mm") or rain_wx.get("rainfall_24h_mm") or curr_wx.get("precipitation_mm") or (db_record.get("rainfall_7d_mm", 0.0) / 7.0 if db_record else 0.0)
+            r7 = rain_wx.get("rainfall_7d_mm", float(db_record.get("rainfall_7d_mm", 0.0) if db_record else 0.0))
+            if r7 > 100.0 or (rain_24h and rain_24h > 20.0):
+                trend = "Rising"
+            elif r7 < 20.0 and (rain_24h is None or rain_24h < 1.0):
+                trend = "Falling"
+            else:
+                trend = "Steady"
+            return {
+                "rainfall_mm_24h": round(float(rain_24h), 2),
+                "water_level_m": 0.0,
+                "water_level_trend": trend,
+                "humidity_percent": round(float(hum_pct), 1),
+                "temperature_c": round(float(temp_c), 1)
+            }
+    except Exception:
+        pass
+
+    fallback_rain = float(db_record.get("rainfall_7d_mm", 0.0) / 7.0) if db_record else 0.0
+    return {
+        "rainfall_mm_24h": round(fallback_rain, 2),
+        "water_level_m": 0.0,
+        "water_level_trend": "Steady",
+        "humidity_percent": 85.0,
+        "temperature_c": 26.5
+    }
 
 
 @router.get(
@@ -139,13 +179,7 @@ def get_current_prediction(
                 ),
                 confidence=0.90,
                 action=_build_action_block(risk_lvl),
-                conditions={
-                    "rainfall_mm_24h": float(pred_data.get("precipitation_sum_24h_mm") or 0.0),
-                    "water_level_m": float(pred_data.get("river_discharge_m3s") or 0.0),
-                    "water_level_trend": "Steady",
-                    "humidity_percent": 85.0,
-                    "temperature_c": 26.5
-                },
+                conditions=_build_conditions_block(canonical_loc_id),
                 status="CURRENT"
             )
         else:
@@ -187,13 +221,7 @@ def get_current_prediction(
         ),
         confidence=0.90,
         action=_build_action_block(risk_lvl),
-        conditions={
-            "rainfall_mm_24h": float(latest_db_record.get("rainfall_7d_mm", 0.0) / 7.0),
-            "water_level_m": 0.0,
-            "water_level_trend": "Steady",
-            "humidity_percent": 85.0,
-            "temperature_c": 26.5
-        },
+        conditions=_build_conditions_block(canonical_loc_id, latest_db_record),
         status=pred_status
     )
 

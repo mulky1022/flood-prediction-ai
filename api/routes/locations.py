@@ -163,6 +163,20 @@ def get_location_details_aggregated(
 
             status_flag = "STALE" if is_stale else "CURRENT"
 
+            # Retrieve real-time weather for telemetry conditions
+            try:
+                from weather.weather_processor import get_weather_for_location
+                wx = get_weather_for_location(canonical_loc_id, use_cache=True)
+                curr_wx = wx.get("current", {}) if wx.get("status") == "success" else {}
+                rain_wx = wx.get("rainfall", {}) if wx.get("status") == "success" else {}
+                temp_c = curr_wx.get("temperature_c") if curr_wx.get("temperature_c") is not None else 26.5
+                hum_pct = curr_wx.get("humidity_percent") if curr_wx.get("humidity_percent") is not None else 85.0
+                rain_24h = rain_wx.get("rainfall_24h_forecast_mm") or rain_wx.get("rainfall_24h_mm") or curr_wx.get("precipitation_mm") or (latest_pred.get("rainfall_7d_mm", 0.0) / 7.0)
+                r7 = rain_wx.get("rainfall_7d_mm", float(latest_pred.get("rainfall_7d_mm", 0.0)))
+                trend = "Rising" if (r7 > 100 or (rain_24h and rain_24h > 20)) else ("Falling" if (r7 < 20 and (not rain_24h or rain_24h < 1)) else "Steady")
+            except Exception:
+                temp_c, hum_pct, rain_24h, trend = 26.5, 85.0, (latest_pred.get("rainfall_7d_mm", 0.0) / 7.0), "Steady"
+
             current_prediction_dict = {
                 "prediction_id": latest_pred.get("id"),
                 "location": {
@@ -185,11 +199,11 @@ def get_location_details_aggregated(
                 "confidence": float(latest_pred.get("confidence", 0.90)),
                 "action": action_blk,
                 "conditions": {
-                    "rainfall_mm_24h": float(latest_pred.get("rainfall_7d_mm", 0.0) / 7.0),
+                    "rainfall_mm_24h": round(float(rain_24h), 2),
                     "water_level_m": 0.0,
-                    "water_level_trend": "Steady",
-                    "humidity_percent": 85.0,
-                    "temperature_c": 26.5
+                    "water_level_trend": trend,
+                    "humidity_percent": round(float(hum_pct), 1),
+                    "temperature_c": round(float(temp_c), 1)
                 },
                 "status": status_flag
             }
