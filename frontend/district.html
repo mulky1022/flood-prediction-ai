@@ -307,8 +307,8 @@
             <div class="sm:col-span-5 flex flex-col items-center justify-center relative">
               <div class="radial-gauge-wrapper">
                 <svg class="radial-gauge-svg" viewBox="0 0 120 120">
-                  <circle cx="60" cy="60" r="50" fill="transparent" stroke="currentColor" class="text-surface-container-highest/40" stroke-width="10"></circle>
-                  <circle id="radialGaugeCircle" cx="60" cy="60" r="50" fill="transparent" stroke="#f97316" stroke-width="10" stroke-dasharray="314.16" stroke-dashoffset="76.88" stroke-linecap="round"></circle>
+                  <circle cx="60" cy="60" r="50" fill="transparent" stroke="#e2e8f0" stroke-width="10"></circle>
+                  <circle id="radialGaugeCircle" cx="60" cy="60" fill="transparent" stroke="#f97316" stroke-width="10" stroke-dasharray="314.16" stroke-dashoffset="76.88" stroke-linecap="round"></circle>
                 </svg>
                 <div class="radial-gauge-center">
                   <span id="radialGaugeNumber" class="font-data-display text-display-lg leading-none font-bold text-on-surface">75.53<span class="text-headline-sm font-normal">%</span></span>
@@ -386,17 +386,17 @@
           <div class="space-y-2 pt-1">
             <div class="flex justify-between items-center font-body-sm text-body-sm">
               <span class="text-on-surface-variant">Topographic Lowland Index:</span>
-              <span id="topographicIndexLabel" class="font-data-metric text-data-metric font-semibold text-error">High Susceptibility</span>
+              <span class="font-data-metric text-data-metric font-semibold text-error">High Susceptibility</span>
             </div>
             <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden flex">
-              <div id="topoBarHighland" class="bg-surface-container-highest h-full transition-all duration-500" style="width: 10%"></div>
-              <div id="topoBarMidland" class="bg-secondary h-full transition-all duration-500" style="width: 20%"></div>
-              <div id="topoBarLowland" class="bg-error h-full transition-all duration-500" style="width: 70%"></div>
+              <div class="bg-secondary h-full" style="width: 70%"></div>
+              <div class="bg-error h-full" style="width: 20%"></div>
+              <div class="bg-surface-container-highest h-full" style="width: 10%"></div>
             </div>
             <div class="flex justify-between font-data-timestamp text-data-timestamp text-outline">
-              <span id="topoTagHighland">Highland (&gt;20m)</span>
-              <span id="topoTagMidland">Midland (10-20m)</span>
-              <span id="topoTagLowland" class="font-semibold text-error">Lowland (&lt;10m)</span>
+              <span>Highland (&gt;20m)</span>
+              <span>Midland (10-20m)</span>
+              <span class="font-semibold text-error">Lowland (&lt;10m)</span>
             </div>
           </div>
         </div>
@@ -526,19 +526,19 @@
             <div>
               <div class="flex justify-between font-label-md text-label-md mb-1">
                 <span class="text-on-surface font-semibold">7-Day Cumulative Runoff</span>
-                <span id="barRunoff7Val" class="font-data-metric text-data-metric text-secondary font-bold">168h Aggregation</span>
+                <span class="font-data-metric text-data-metric text-secondary font-bold">168h Aggregation</span>
               </div>
               <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
-                <div id="barRunoff7" class="bg-secondary h-full rounded-full transition-all duration-500" style="width: 45%;"></div>
+                <div class="bg-secondary h-full rounded-full" style="width: 45%;"></div>
               </div>
             </div>
             <div>
               <div class="flex justify-between font-label-md text-label-md mb-1">
                 <span class="text-on-surface font-semibold">30-Day Soil Saturation Index</span>
-                <span id="barSaturation30Val" class="font-data-metric text-data-metric text-secondary font-bold">720h Baseline</span>
+                <span class="font-data-metric text-data-metric text-secondary font-bold">720h Baseline</span>
               </div>
               <div class="w-full bg-surface-container-high h-2.5 rounded-full overflow-hidden">
-                <div id="barSaturation30" class="bg-secondary-container h-full rounded-full transition-all duration-500" style="width: 65%;"></div>
+                <div class="bg-secondary-container h-full rounded-full" style="width: 65%;"></div>
               </div>
             </div>
           </div>

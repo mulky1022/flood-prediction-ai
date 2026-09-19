@@ -840,7 +840,7 @@ function updateLocationContextUI({ title, subtitle, icon, iconBg, distance }) {
  * Render Live Catchment Inundation Diagnostic Analysis Panel
  */
 export function renderLiveCatchmentAnalysis(predRes, loc, weather) {
-  const pred = predRes ? (predRes.prediction || predRes) : null;
+  const pred = predRes ? (predRes.prediction || predRes.current_prediction || predRes) : null;
   const riskObj = pred ? (pred.risk || {}) : {};
   let prob = 0;
   if (riskObj.flood_probability_percent !== undefined) {
@@ -1074,10 +1074,8 @@ function renderPredictionEngine(predRes, loc, activeAlerts = []) {
   if (circleEl) {
     const totalCircumference = 314.16;
     const offset = totalCircumference - (totalCircumference * (Math.min(Math.max(probPercent, 0), 100) / 100));
-    circleEl.setAttribute('r', '50');
     circleEl.style.strokeDasharray = `${totalCircumference}`;
     circleEl.style.strokeDashoffset = `${offset}`;
-    circleEl.style.transition = 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease';
     circleEl.setAttribute('stroke', risk.dotColor);
   }
 
@@ -1119,47 +1117,6 @@ function renderChannelProximity(loc, weather) {
   if (channelLoc) channelLoc.textContent = `${loc.place_name} (${loc.district})`;
   if (channelDistance) channelDistance.textContent = `Distance to River: ${common.formatNumber(loc.distance_to_river_m, 0, 'N/A')}m`;
   if (channelElevation) channelElevation.textContent = `Elevation: ${common.formatNumber(loc.elevation_m, 1, 'N/A')}m ASL`;
-
-  // Topographic Lowland Susceptibility Gauge
-  const topoLabel = document.getElementById('topographicIndexLabel');
-  const barHighland = document.getElementById('topoBarHighland');
-  const barMidland = document.getElementById('topoBarMidland');
-  const barLowland = document.getElementById('topoBarLowland');
-  const tagHighland = document.getElementById('topoTagHighland');
-  const tagMidland = document.getElementById('topoTagMidland');
-  const tagLowland = document.getElementById('topoTagLowland');
-
-  const elev = Number(loc.elevation_m || 0);
-  if (topoLabel) {
-    if (elev < 10) {
-      topoLabel.textContent = 'High Susceptibility';
-      topoLabel.className = 'font-data-metric text-data-metric font-semibold text-error';
-      if (barLowland) { barLowland.style.width = '70%'; barLowland.className = 'bg-error h-full transition-all duration-500'; }
-      if (barMidland) { barMidland.style.width = '20%'; barMidland.className = 'bg-secondary h-full transition-all duration-500'; }
-      if (barHighland) { barHighland.style.width = '10%'; barHighland.className = 'bg-surface-container-highest h-full transition-all duration-500'; }
-      if (tagLowland) tagLowland.className = 'font-semibold text-error';
-      if (tagMidland) tagMidland.className = '';
-      if (tagHighland) tagHighland.className = '';
-    } else if (elev <= 20) {
-      topoLabel.textContent = 'Moderate Vulnerability';
-      topoLabel.className = 'font-data-metric text-data-metric font-semibold text-amber-500';
-      if (barLowland) { barLowland.style.width = '25%'; barLowland.className = 'bg-error/70 h-full transition-all duration-500'; }
-      if (barMidland) { barMidland.style.width = '60%'; barMidland.className = 'bg-amber-500 h-full transition-all duration-500'; }
-      if (barHighland) { barHighland.style.width = '15%'; barHighland.className = 'bg-surface-container-highest h-full transition-all duration-500'; }
-      if (tagLowland) tagLowland.className = '';
-      if (tagMidland) tagMidland.className = 'font-semibold text-amber-500';
-      if (tagHighland) tagHighland.className = '';
-    } else {
-      topoLabel.textContent = 'Lowland Shielded (Elevated)';
-      topoLabel.className = 'font-data-metric text-data-metric font-semibold text-emerald-500';
-      if (barLowland) { barLowland.style.width = '10%'; barLowland.className = 'bg-error/40 h-full transition-all duration-500'; }
-      if (barMidland) { barMidland.style.width = '20%'; barMidland.className = 'bg-secondary h-full transition-all duration-500'; }
-      if (barHighland) { barHighland.style.width = '70%'; barHighland.className = 'bg-emerald-500 h-full transition-all duration-500'; }
-      if (tagLowland) tagLowland.className = '';
-      if (tagMidland) tagMidland.className = '';
-      if (tagHighland) tagHighland.className = 'font-semibold text-emerald-500';
-    }
-  }
 }
 
 /**
@@ -1191,31 +1148,13 @@ function renderPrecipitationAnalytics(weather) {
   const rain30El = document.getElementById('detailRain30');
   const maxRainEl = document.getElementById('detailMaxDailyRain');
 
-  const r7 = rolling ? (rolling.rainfall_7d_mm ?? rolling.precipitation_sum_7d_mm ?? 0) : 0;
-  const r30 = rolling ? (rolling.monthly_rainfall_mm ?? rolling.precipitation_sum_30d_mm ?? 0) : 0;
-  const maxD = rolling ? (rolling.max_daily_rainfall_7d_mm ?? rolling.max_daily_rainfall ?? 0) : 0;
+  const r7 = rolling ? (rolling.rainfall_7d_mm ?? rolling.precipitation_sum_7d_mm) : null;
+  const r30 = rolling ? (rolling.monthly_rainfall_mm ?? rolling.precipitation_sum_30d_mm) : null;
+  const maxD = rolling ? (rolling.max_daily_rainfall_7d_mm ?? rolling.max_daily_rainfall) : null;
 
   if (rain7El) rain7El.textContent = `${common.formatNumber(r7, 1, '0.0')} mm`;
   if (rain30El) rain30El.textContent = `${common.formatNumber(r30, 1, '0.0')} mm`;
   if (maxRainEl) maxRainEl.textContent = `${common.formatNumber(maxD, 1, '0.0')} mm`;
-
-  // Dynamic Telemetry Progress Bars
-  const barRunoff7 = document.getElementById('barRunoff7');
-  const barRunoff7Val = document.getElementById('barRunoff7Val');
-  const barSaturation30 = document.getElementById('barSaturation30');
-  const barSaturation30Val = document.getElementById('barSaturation30Val');
-
-  if (barRunoff7) {
-    const runoffPct = Math.min(100, Math.max(8, Math.round((r7 / 120) * 100)));
-    barRunoff7.style.width = `${runoffPct}%`;
-    if (barRunoff7Val) barRunoff7Val.textContent = `${common.formatNumber(r7, 1)} mm (168h)`;
-  }
-
-  if (barSaturation30) {
-    const satPct = Math.min(100, Math.max(12, Math.round((r30 / 250) * 100)));
-    barSaturation30.style.width = `${satPct}%`;
-    if (barSaturation30Val) barSaturation30Val.textContent = `${common.formatNumber(r30, 1)} mm (720h)`;
-  }
 }
 
 /**
@@ -1244,7 +1183,7 @@ function renderVulnerabilityMatrix(loc) {
  */
 function renderDecisionThreshold(predRes) {
   if (!predRes) return;
-  const pred = predRes.prediction || predRes;
+  const pred = predRes.prediction || predRes.current_prediction || predRes;
   const riskObj = pred.risk || {};
   let prob1 = 0;
   if (riskObj.flood_probability_percent !== undefined) {
@@ -1256,7 +1195,7 @@ function renderDecisionThreshold(predRes) {
   } else if (pred.flood_probability !== undefined) {
     prob1 = Number(pred.flood_probability) * 100;
   }
-  const prob0 = 100 - prob1;
+  const prob0 = Math.max(0, 100 - prob1);
 
   const class1Val = document.getElementById('splitClass1Val');
   const class0Val = document.getElementById('splitClass0Val');
@@ -1390,9 +1329,9 @@ function setupExportButton() {
       ['Relative Humidity (%)', weatherData?.current?.humidity_percent !== undefined ? weatherData.current.humidity_percent : ''],
       ['7-Day Rain (mm)', weatherData?.rainfall?.rainfall_7d_mm ?? weatherData?.rolling_aggregations?.precipitation_sum_7d_mm ?? ''],
       ['30-Day Rain (mm)', weatherData?.rainfall?.monthly_rainfall_mm ?? weatherData?.rolling_aggregations?.precipitation_sum_30d_mm ?? ''],
-      ['Flood Probability (%)', (predictionData?.risk?.flood_probability_percent ?? predictionData?.prediction?.flood_probability_percent ?? (predictionData?.flood_probability ? predictionData.flood_probability * 100 : ''))],
-      ['Prediction Class', (predictionData?.class ?? predictionData?.prediction_class ?? predictionData?.prediction?.class ?? '')],
-      ['Risk Level', (predictionData?.risk?.level ?? predictionData?.risk_level ?? predictionData?.prediction?.risk_level ?? '')]
+      ['Flood Probability (%)', predictionData?.prediction?.flood_probability_percent !== undefined ? predictionData.prediction.flood_probability_percent : ''],
+      ['Prediction Class', predictionData?.prediction?.class !== undefined ? predictionData.prediction.class : ''],
+      ['Risk Level', predictionData?.prediction?.risk_level || '']
     ];
 
     const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");

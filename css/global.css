@@ -172,12 +172,69 @@
   color: var(--color-secondary) !important;
 }
 
+.bg-secondary {
+  background-color: var(--color-secondary) !important;
+}
+
+.bg-secondary-container {
+  background-color: var(--color-secondary-container) !important;
+}
+
+.text-secondary-container {
+  color: var(--color-secondary-container) !important;
+}
+
 .bg-secondary-fixed {
   background-color: var(--color-secondary-fixed) !important;
 }
 
 .text-on-secondary-fixed {
   color: var(--color-on-secondary-fixed) !important;
+}
+
+/* Semantic Status & Risk Utilities */
+.text-error {
+  color: var(--risk-crit) !important;
+}
+
+.bg-error {
+  background-color: var(--risk-crit) !important;
+}
+
+.border-error {
+  border-color: var(--risk-crit) !important;
+}
+
+.text-warning {
+  color: var(--risk-mod) !important;
+}
+
+.bg-warning {
+  background-color: var(--risk-mod) !important;
+}
+
+.border-warning {
+  border-color: var(--risk-mod) !important;
+}
+
+.text-success {
+  color: var(--risk-low) !important;
+}
+
+.bg-success {
+  background-color: var(--risk-low) !important;
+}
+
+.border-success {
+  border-color: var(--risk-low) !important;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
 }
 
 /* Specific Dark Mode Overrides */
