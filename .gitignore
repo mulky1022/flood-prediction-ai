@@ -48,3 +48,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Vercel local build output
+.vercel/output/
+.vercel/.env*
+.vercel/python/
