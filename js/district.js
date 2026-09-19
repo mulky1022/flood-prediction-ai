@@ -1063,20 +1063,25 @@ function renderPredictionEngine(predRes, loc, activeAlerts = []) {
     badgeEl.innerHTML = `<span class="h-2 w-2 rounded-full ${hasActiveAlert ? 'animate-ping' : ''}" style="background-color: ${risk.dotColor}"></span><span>${alertLabel}</span>`;
   }
 
-  // Radial Gauge
+  // Radial Gauge with dynamic animated count-up and stroke drawing
   const circleEl = document.getElementById('radialGaugeCircle');
   const numberEl = document.getElementById('radialGaugeNumber');
 
   if (numberEl) {
-    numberEl.innerHTML = `${common.formatNumber(probPercent, 2)}<span class="text-headline-sm font-normal">%</span>`;
+    animateValue(numberEl, 0, probPercent, 1200, 2, true);
   }
 
   if (circleEl) {
     const totalCircumference = 314.16;
     const offset = totalCircumference - (totalCircumference * (Math.min(Math.max(probPercent, 0), 100) / 100));
     circleEl.style.strokeDasharray = `${totalCircumference}`;
-    circleEl.style.strokeDashoffset = `${offset}`;
     circleEl.setAttribute('stroke', risk.dotColor);
+    circleEl.style.strokeDashoffset = `${totalCircumference}`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        circleEl.style.strokeDashoffset = `${offset}`;
+      });
+    });
   }
 
   // Classification & Recommendation Block
@@ -1179,6 +1184,34 @@ function renderVulnerabilityMatrix(loc) {
 }
 
 /**
+ * Smooth numeric count-up animation with cubic easing
+ */
+function animateValue(element, start, end, duration = 1200, decimals = 2, isPercentage = true) {
+  if (!element) return;
+  const startTime = performance.now();
+  const diff = end - start;
+
+  function step(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    const currentVal = start + diff * easeOut;
+
+    if (isPercentage) {
+      element.innerHTML = `${currentVal.toFixed(decimals)}<span class="text-headline-sm font-normal">%</span>`;
+    } else {
+      element.textContent = `${currentVal.toFixed(decimals)}%`;
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+/**
  * Binary Decision Threshold
  */
 function renderDecisionThreshold(predRes) {
@@ -1202,10 +1235,25 @@ function renderDecisionThreshold(predRes) {
   const class1Bar = document.getElementById('splitClass1Bar');
   const class0Bar = document.getElementById('splitClass0Bar');
 
-  if (class1Val) class1Val.textContent = `${common.formatNumber(prob1, 2)}%`;
-  if (class0Val) class0Val.textContent = `${common.formatNumber(prob0, 2)}%`;
-  if (class1Bar) class1Bar.style.width = `${Math.min(Math.max(prob1, 0), 100)}%`;
-  if (class0Bar) class0Bar.style.width = `${Math.min(Math.max(prob0, 0), 100)}%`;
+  if (class1Val) animateValue(class1Val, 0, prob1, 1000, 2, false);
+  if (class0Val) animateValue(class0Val, 0, prob0, 1000, 2, false);
+
+  if (class1Bar) {
+    class1Bar.style.width = '0%';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        class1Bar.style.width = `${Math.min(Math.max(prob1, 0), 100)}%`;
+      });
+    });
+  }
+  if (class0Bar) {
+    class0Bar.style.width = '0%';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        class0Bar.style.width = `${Math.min(Math.max(prob0, 0), 100)}%`;
+      });
+    });
+  }
 }
 
 /**
