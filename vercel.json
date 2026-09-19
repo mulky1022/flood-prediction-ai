@@ -3,12 +3,6 @@
   "public": true,
   "cleanUrls": true,
   "trailingSlash": false,
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 30,
-      "excludeFiles": "tests/**|docs/**|.github/**|scripts/**|frontend/stitch*/**"
-    }
-  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/api", "destination": "/api" },
