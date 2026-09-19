@@ -428,13 +428,14 @@ function renderStationMarkers() {
     }
 
     const isSelected = loc.id === selectedStationId;
+    const displayName = common.i18n ? common.i18n.getLocationName(loc) : loc.place_name;
     const customIcon = createStationDivIcon(risk, isSelected, false);
     const marker = L.marker([lat, lon], { icon: customIcon });
 
     marker.bindTooltip(`
       <div class="flex items-center gap-1.5 font-sans">
         <span class="w-2 h-2 rounded-full" style="background-color: ${risk.dotColor}"></span>
-        <span class="font-semibold">${loc.place_name.split(' ')[0]}</span>
+        <span class="font-semibold">${displayName}</span>
         <span style="color: ${risk.dotColor}">(${hasData ? `${common.formatNumber(probPct, 0)}%` : 'NO DATA'})</span>
       </div>
     `, {

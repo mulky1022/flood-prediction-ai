@@ -188,7 +188,7 @@ function renderMiniMapStations(locations) {
     marker.bindTooltip(`
       <div class="flex items-center gap-1.5 font-sans">
         <span class="w-2 h-2 rounded-full" style="background-color: ${riskDetails.dotColor}"></span>
-        <span class="font-semibold">${displayName.split(' ')[0]}</span>
+        <span class="font-semibold">${displayName}</span>
         <span class="text-xs" style="color: ${riskDetails.dotColor}">(${common.formatNumber(prob * 100, 0)}%)</span>
       </div>
     `, {

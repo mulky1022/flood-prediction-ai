@@ -417,24 +417,6 @@ export const common = {
       themeBtn.onclick = () => this.toggleTheme();
     }
     this.syncThemeIcon();
-    this.initEmergencyToggle(headerEl);
-  },
-
-  /**
-   * Initialize Low-Bandwidth / Emergency Mode switch button in header
-   */
-  initEmergencyToggle(headerEl) {
-    if (!headerEl || document.getElementById('emergencyToggleBtn')) return;
-    const rightSegment = headerEl.querySelector('.header-container > div:last-child');
-    if (rightSegment) {
-      const btn = document.createElement('a');
-      btn.id = 'emergencyToggleBtn';
-      btn.href = 'emergency.html';
-      btn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition-all flex items-center gap-1';
-      btn.setAttribute('aria-label', 'Low-Bandwidth Emergency Mode');
-      btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span> <span>Emergency</span>`;
-      rightSegment.insertBefore(btn, rightSegment.firstChild);
-    }
   },
 
   /**
